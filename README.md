@@ -1,849 +1,330 @@
-- github: https://github.com/future94/alarm-log
-- gitee : https://gitee.com/future94/alarm-log
+# Alarm Log
 
-## 1. 日志监控报警
-**核心功能**：
-- 监控日志中抛出的指定异常或者方法与类中抛出的指定异常，发送到钉钉、企业微信、邮箱等。
-- 支持log4j、log4j2、logback等主流框架。
-- 支持SpringBoot、SpringMVC等框架。
+异常日志监控和告警发送组件。它可以从日志事件或 `@Alarm` 标注的方法/类中识别指定异常，并通过邮件、钉钉群机器人或企业微信发送告警。
 
-## 2. SpringBoot
+- 支持 Java 8+、Spring Boot、Spring MVC
+- 支持 Logback、Log4j 1.x、Log4j2
 
-详情查看`alarm-log-examples-spring-boot`包下代码
+## 快速开始
 
-### 2.1 集成
-#### 引入如下依赖
+Spring Boot 项目推荐直接使用 starter。
+
 ```xml
 <dependency>
-    <groupId>com.future94</groupId>
+    <groupId>io.github.future0923</groupId>
     <artifactId>alarm-log-spring-boot-starter</artifactId>
     <version>${latest.version}</version>
 </dependency>
 ```
 
-### 2.2 引入日志监控
+配置需要告警的异常和至少一个通知通道：
 
-#### 2.2.1 同步方式
-- **log4j** : 配置项说明见[2.3.3 日志配置中设置](#233-日志配置中设置)
-```xml
-<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
-<log4j:configuration>
-    <appender name="Console" class="org.apache.log4j.ConsoleAppender">
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss,SSS} [%p] %m  >> %c:%L%n"/>
-        </layout>
-    </appender>
-
-    <!--这里替换成AspectLog4jAsyncAppender-->
-    <appender name="AlarmLog" class="com.future94.alarm.log.core.enhance.log4j.AlarmLogLog4jAsyncAppender">
-        <param name="doWarnException" value="false"/>
-        <param name="warnExceptionExtend" value="java.lang.Exception,java.lang.RuntimeException"/>
-        <appender-ref ref="Console"/>
-    </appender>
-
-    <root>
-        <priority value="info" />
-        <appender-ref ref="Console"/>
-        <appender-ref ref="AlarmLog"/>
-    </root>
-</log4j:configuration>
-```
-
-- **log4j2** : 配置项说明见[2.3.3 日志配置中设置](#233-日志配置中设置)
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration debug="true">
-    <!--先定义所有的appender-->
-    <appenders>
-        <!--控制台日志-->
-        <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
-        </Console>
-
-        <AlarmLog name="AlarmLog">
-            <warnExceptionExtend>false</warnExceptionExtend>
-            <doWarnException>java.lang.Exception,java.lang.RuntimeException</doWarnException>
-        </AlarmLog>
-
-    </appenders>
-    <!--然后定义logger，只有定义了logger并引入的appender，appender才会生效-->
-    <loggers>
-        <root level="INFO">
-            <appender-ref ref="Console"/>
-            <!-- AlarmLog 处理有打印INFO级别的日志，如果level是INFO级别会循环调用，抛出 ERROR Recursive call to appender ALARM_LOG，所以最好将ALARM_LOG 的级别设置为ERROR -->
-            <appender-ref ref="AlarmLog" level="ERROR" />
-        </root>
-    </loggers>
-</configuration>
-```
-
-- **logback** : 配置项说明见[2.3.3 日志配置中设置](#233-日志配置中设置)
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration debug="true">
-
-    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
-    <appender name="AlarmLog" class="com.future94.alarm.log.core.enhance.logback.AlarmLogLogbackAsyncAppender">
-        <warnExceptionExtend>false</warnExceptionExtend>
-        <doWarnException>java.lang.Exception,java.lang.RuntimeException</doWarnException>
-        <includeCallerData>true</includeCallerData>
-        <appender-ref ref="Console"/>
-    </appender>
-
-    <root level="INFO">
-        <appender-ref ref="Console" />
-        <appender-ref ref="AlarmLog" level="ERROR" />
-    </root>
-</configuration>
-```
-
-#### 2.2.2 异步方式
-
-- **log4j** : 配置项说明见[2.3.3 日志配置中设置](#233-日志配置中设置)
-```xml
-<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
-<log4j:configuration>
-    <appender name="Console" class="org.apache.log4j.ConsoleAppender">
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss,SSS} [%p] %m  >> %c:%L%n"/>
-        </layout>
-    </appender>
-
-    <!--这里替换成AspectLog4jAsyncAppender-->
-    <appender name="AlarmLog" class="com.future94.alarm.log.core.enhance.log4j.AlarmLogLog4jAsyncAppender">
-        <param name="doWarnException" value="false"/>
-        <param name="warnExceptionExtend" value="java.lang.Exception,java.lang.RuntimeException"/>
-        <appender-ref ref="Console"/>
-    </appender>
-
-    <appender name="AsyncConsole" class="org.apache.log4j.AsyncAppender">
-        <appender-ref ref="Console"/>
-    </appender>
-
-    <appender name="AsyncAlarmLog" class="org.apache.log4j.AsyncAppender">
-        <appender-ref ref="AlarmLog"/>
-    </appender>
-
-    <root>
-        <priority value="info" />
-        <appender-ref ref="AsyncConsole"/>
-        <appender-ref ref="AsyncAlarmLog"/>
-    </root>
-</log4j:configuration>
-```
-
-- **log4j2** : 配置项说明见[2.3.3 日志配置中设置](#233-日志配置中设置)
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration debug="true">
-    <!--先定义所有的appender-->
-    <appenders>
-        <!--控制台日志-->
-        <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
-        </Console>
-
-        <AlarmLog name="AlarmLog">
-            <warnExceptionExtend>false</warnExceptionExtend>
-            <doWarnException>java.lang.Exception,java.lang.RuntimeException</doWarnException>
-        </AlarmLog>
-
-        <!--异步输出到控制台-->
-        <Async name="AsyncConsole">
-            <AppenderRef ref="Console"/>
-        </Async>
-
-        <!--异步-->
-        <Async name="AsyncAlarmLog">
-            <AppenderRef ref="AlarmLog"/>
-        </Async>
-
-    </appenders>
-    <!--然后定义logger，只有定义了logger并引入的appender，appender才会生效-->
-    <loggers>
-        <root level="INFO">
-            <appender-ref ref="AsyncConsole"/>
-            <!-- AlarmLog 处理有打印INFO级别的日志，如果level是INFO级别会循环调用，抛出 ERROR Recursive call to appender ALARM_LOG，所以最好将ALARM_LOG 的级别设置为ERROR -->
-            <appender-ref ref="AsyncAlarmLog" level="ERROR" />
-        </root>
-    </loggers>
-</configuration>
-```
-
-- **logback** : 配置项说明见[2.3.3 日志配置中设置](#233-日志配置中设置)
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration debug="true">
-
-    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
-    <appender name="AlarmLog" class="com.future94.alarm.log.core.enhance.logback.AlarmLogLogbackAsyncAppender">
-        <warnExceptionExtend>false</warnExceptionExtend>
-        <doWarnException>java.lang.Exception,java.lang.RuntimeException</doWarnException>
-        <appender-ref ref="Console"/>
-    </appender>
-
-    <appender name="AsyncConsole" class="ch.qos.logback.classic.AsyncAppender">
-        <discardingThreshold>0</discardingThreshold>
-        <appender-ref ref="Console"/>
-    </appender>
-
-
-    <appender name="AsyncAlarmLog" class="ch.qos.logback.classic.AsyncAppender">
-        <discardingThreshold>0</discardingThreshold>
-        <appender-ref ref="AlarmLog"/>
-    </appender>
-
-
-    <root level="INFO">
-        <appender-ref ref="AsyncConsole" />
-        <appender-ref ref="AsyncAlarmLog" level="ERROR" />
-    </root>
-</configuration>
-```
-
-### 2.3 提供多种方式获取指定的日志异常信息
-
-#### 2.3.1 系统全局配置
-- spring.alarm-log.do-warn-exception : 获取日志中指定的异常类全路径信息，类型为List.
-- spring.alarm-log.warn-exception-extend : 获取日志中指定异常信息是否启动继承判断。如：do-warn-exception为java.lang.Throwable，warn-exception-extend为true，则所有java.lang.Throwable的子类（java.lang.Exception、java.lang.RuntimeException、java.io.IOException等）都会触发警告事件。
 ```yaml
 spring:
-    alarm-log:
-        warn-exception-extend: false
-        do-warn-exception:
-            - java.lang.Throwable
-            - java.lang.Exception
+  alarm-log:
+    do-warn-exception:
+      - java.lang.Exception
+    warn-exception-extend: true
+    warn:
+      dingtalk:
+        enabled: true
+        token: your-dingtalk-token
+        secret: your-dingtalk-secret
 ```
 
-#### 2.3.2 继承、实现指定类
-- com.future94.alarm.log.common.exception.**AlarmLogException** : 此类继承java.lang.Exception类，继承AlarmLogException类，即当日志事件中抛出此时触发警告事件。
+在日志配置中加入 `AlarmLog` Appender。以 Logback 为例：
 
-- com.future94.alarm.log.common.exception.**AlarmLogRuntimeException** : 此类继承java.lang.RuntimeException类，继承AlarmLogException类，即当日志事件中抛出此时触发警告事件。
-
-- com.future94.alarm.log.common.exception.**AlarmLogDoWarnException** : 实现AlarmLogDoWarnException接口，即当日志事件中抛出此时触发警告事件。<font color="red">注意：目前此接口还需要是java.lang.Throwable子类，以后会修改此限制。由于java是单继承，目前项目中不方便继承AlarmLog异常时，可以使用实现此接口的方式</font>。
-
-#### 2.3.3 日志配置中设置
-
-- **log4j** : doWarnException、warnExceptionExtend配置意义与上面一致。
 ```xml
-<appender name="AlarmLog" class="com.future94.alarm.log.core.enhance.log4j.AlarmLogLog4jAsyncAppender">
-    <param name="doWarnException" value="false"/>
-    <param name="warnExceptionExtend" value="java.lang.Exception,java.lang.RuntimeException"/>
-    <appender-ref ref="Console"/>
-</appender>
+<configuration>
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="AlarmLog" class="io.github.future0923.alarm.log.core.enhance.logback.AlarmLogLogbackAsyncAppender">
+        <appender-ref ref="Console"/>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="Console"/>
+        <appender-ref ref="AlarmLog" level="ERROR"/>
+    </root>
+</configuration>
 ```
 
-- **log4j2** :  doWarnException、warnExceptionExtend配置意义与上面一致。<font color="red">注意：标签必须为AlarmLog，name属性可以随意</font>。
-```xml
-<AlarmLog name="AlarmLog">
-    <warnExceptionExtend>false</warnExceptionExtend>
-    <doWarnException>java.lang.Exception,java.lang.RuntimeException</doWarnException>
-</AlarmLog>
-```
+之后代码中正常打印异常日志即可触发告警：
 
-- **logback** : doWarnException、warnExceptionExtend配置意义与上面一致。
-```xml
-<appender name="AlarmLog" class="com.future94.alarm.log.core.enhance.logback.AlarmLogLogbackAsyncAppender">
-    <warnExceptionExtend>false</warnExceptionExtend>
-    <doWarnException>java.lang.Exception,java.lang.RuntimeException</doWarnException>
-    <appender-ref ref="Console"/>
-</appender>
-```
-
-#### 2.3.4 使用@Alarm注解
-- doWarnException、warnExceptionExtend配置意义与上面一致。
-- 注解加载类上时，注解设置作用域为当前类，只对当前类生效。
-- 注解加载方法上时，注解设置作用域为当前方法，只对当前方法生效。
 ```java
-@Target({ElementType.TYPE, ElementType.METHOD})
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-public @interface Alarm {
+log.error("create order failed", exception);
+```
 
-    Class<? extends Throwable>[] doWarnException() default {Throwable.class};
+## 告警触发规则
 
-    boolean warnExceptionExtend() default false;
+一个异常满足以下任一条件时会触发告警：
+
+1. 异常类在 `do-warn-exception` 中配置。
+2. `warn-exception-extend=true`，且异常是 `do-warn-exception` 中任一类的子类。
+3. 异常继承 `AlarmLogException` 或 `AlarmLogRuntimeException`。
+4. 异常实现 `AlarmLogDoWarnException` 接口。
+5. 方法或类标注了 `@Alarm`，且抛出的异常命中注解配置。
+
+### 精确匹配和继承匹配
+
+```yaml
+spring:
+  alarm-log:
+    do-warn-exception:
+      - java.lang.Exception
+    warn-exception-extend: false
+```
+
+`warn-exception-extend=false` 时只匹配 `java.lang.Exception` 本身。若改为 `true`，则 `RuntimeException`、`IOException` 等 `Exception` 子类也会触发告警。
+
+### 使用标记异常
+
+```java
+public class BizException extends AlarmLogRuntimeException {
+    public BizException(String message) {
+        super(message);
+    }
 }
 ```
 
-**示例** ：
-- test1只有在抛出Exception时候才会触发。
-- test2当抛出TestAspectException或者Exception时都会触发。
-```java
-@RestController
-@Alarm(doWarnException = Exception.class, warnExceptionExtend = false)
-public class TestController {
+如果已有异常类无法继承项目提供的异常基类，可以实现 `AlarmLogDoWarnException`。该接口当前仍需要异常类同时是 `Throwable` 子类。
 
-    @GetMapping("/test1")
-    public void test1() {
-        logger.error("test4", new TestAspectException());
-    }
+## Spring Boot 配置
 
-    @GetMapping("/test2")
-    @Alarm(doWarnException = TestAspectException.class, warnExceptionExtend = false)
-    public void test1() {
-        logger.error("test2", new TestAspectException());
-    }
+### 基础配置
 
-}
-```
+| 配置项 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| `spring.alarm-log.do-warn-exception` | `List<String>` | 空 | 需要触发告警的异常类全限定名 |
+| `spring.alarm-log.warn-exception-extend` | `Boolean` | `false` | 是否按继承关系匹配异常 |
+| `spring.alarm-log.max-retry-times` | `Integer` | `3` | 告警发送失败后的最大重试次数 |
+| `spring.alarm-log.retry-sleep-millis` | `Integer` | `1000` | 重试等待基准时间，实际等待会按次数递增 |
+| `spring.alarm-log.print-stack-trace` | `Boolean` | `false` | 告警内容是否包含堆栈 |
+| `spring.alarm-log.simple-warn-info` | `Boolean` | `false` | 是否使用简化告警内容 |
 
-### 2.4 提供多种监控通知方式
+### 钉钉群机器人
 
-多种方式可以同时使用，设置其enabled为true即可。
-
-#### 2.4.1 邮件
 ```yaml
 spring:
-    alarm-log:
-        warn:
-            mail:
-                enabled: true
-                smtpHost: xxx
-                smtpPort: xxx
-                # 邮箱,多个用逗号分开
-                to: future94@qq.com,xxx
-                from: xxx
-                username: xxx
-                password: xxx
+  alarm-log:
+    warn:
+      dingtalk:
+        enabled: true
+        token: your-token
+        secret: your-secret
 ```
-#### 2.4.2 企业微信
+
+### 企业微信应用消息
+
 ```yaml
 spring:
-    alarm-log:
-        warn:
-            workweixin:
-                enabled: true
-                # 企业ID,多个用逗号分开
-                to: WeiLai,xxx
-                applicationId: xxx
-                corpid: xxx
-                corpsecret: xxx
+  alarm-log:
+    warn:
+      workweixin:
+        enabled: true
+        to: WeiLai,user2
+        application-id: 1000002
+        corpid: your-corpid
+        corpsecret: your-corpsecret
 ```
 
-#### 2.4.3 钉钉群
+### 邮件
+
 ```yaml
 spring:
-    alarm-log:
-        warn:
-            dingtalk:
-                enabled: true
-                token: xxx
-                secret: xxx
+  alarm-log:
+    warn:
+      mail:
+        enabled: true
+        smtp-host: smtp.example.com
+        smtp-port: 465
+        to: user1@example.com,user2@example.com
+        from: alarm@example.com
+        username: alarm@example.com
+        password: your-password
+        ssl: true
+        debug: false
 ```
 
-### 2.5 配置警告消息发送异常重试
+多个通知通道可以同时开启。
 
-- maxRetryTimes : 最大重试次数
-- retrySleepMillis : 每次重试等待间隔，最终效果【retrySleepMillis * ( 1 << maxRetryTimes )】
-```yaml
-spring:
-    alarm-log:
-        max-retry-times: 1
-        retry-sleep-millis: 3000
-```
+## 日志框架配置
 
-## 3. SpringMvc
+`doWarnException` 和 `warnExceptionExtend` 既可以写在 Spring 全局配置中，也可以写在 Appender 上。Appender 上的配置会写入全局 `AlarmLogContext`，因此同一进程内会影响所有后续告警判断。
 
-具体示例可以查看`alarm-log-examples-spring-mv`包
+多数 Spring Boot 项目只需要在 `application.yml` 中配置异常匹配，Appender 中保留最小配置即可。
 
-### 3.1 集成
-#### 引入核心包依赖
+### Logback
+
 ```xml
-<dependency>
-    <groupId>com.future94</groupId>
-    <artifactId>alarm-log-core</artifactId>
-    <version>${latest.version}</version>
-</dependency>
-```
-
-### 3.2 引入日志监控
-
-#### 3.2.1 同步方式
-- **log4j** : 配置项说明见[3.3.3 日志配置中设置](#333-日志配置中设置)
-```xml
-<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
-<log4j:configuration>
-    <appender name="Console" class="org.apache.log4j.ConsoleAppender">
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss,SSS} [%p] %m  >> %c:%L%n"/>
-        </layout>
-    </appender>
-
-    <!--这里替换成AspectLog4jAsyncAppender-->
-    <appender name="AlarmLog" class="com.future94.alarm.log.core.enhance.log4j.AlarmLogLog4jAsyncAppender">
-        <param name="doWarnException" value="false"/>
-        <param name="warnExceptionExtend" value="java.lang.Exception,java.lang.RuntimeException"/>
-        <appender-ref ref="Console"/>
-    </appender>
-
-    <root>
-        <priority value="info" />
-        <appender-ref ref="Console"/>
-        <appender-ref ref="AlarmLog"/>
-    </root>
-</log4j:configuration>
-```
-
-- **log4j2** : 配置项说明见[3.3.3 日志配置中设置](#333-日志配置中设置)
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration debug="true">
-    <!--先定义所有的appender-->
-    <appenders>
-        <!--控制台日志-->
-        <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
-        </Console>
-
-        <AlarmLog name="AlarmLog">
-            <warnExceptionExtend>false</warnExceptionExtend>
-            <doWarnException>java.lang.Exception,java.lang.RuntimeException</doWarnException>
-        </AlarmLog>
-
-    </appenders>
-    <!--然后定义logger，只有定义了logger并引入的appender，appender才会生效-->
-    <loggers>
-        <root level="INFO">
-            <appender-ref ref="Console"/>
-            <!-- AlarmLog 处理有打印INFO级别的日志，如果level是INFO级别会循环调用，抛出 ERROR Recursive call to appender ALARM_LOG，所以最好将ALARM_LOG 的级别设置为ERROR -->
-            <appender-ref ref="AlarmLog" level="ERROR" />
-        </root>
-    </loggers>
-</configuration>
-```
-
-- **logback** : 配置项说明见[3.3.3 日志配置中设置](#333-日志配置中设置)
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration debug="true">
-
-    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
-    <appender name="AlarmLog" class="com.future94.alarm.log.core.enhance.logback.AlarmLogLogbackAsyncAppender">
-        <warnExceptionExtend>false</warnExceptionExtend>
-        <doWarnException>java.lang.Exception,java.lang.RuntimeException</doWarnException>
-        <includeCallerData>true</includeCallerData>
-        <appender-ref ref="Console"/>
-    </appender>
-
-    <root level="INFO">
-        <appender-ref ref="Console" />
-        <appender-ref ref="AlarmLog" level="ERROR" />
-    </root>
-</configuration>
-```
-
-#### 3.2.2 异步方式
-
-- **log4j** : 配置项说明见[3.3.3 日志配置中设置](#333-日志配置中设置)
-```xml
-<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
-<log4j:configuration>
-    <appender name="Console" class="org.apache.log4j.ConsoleAppender">
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss,SSS} [%p] %m  >> %c:%L%n"/>
-        </layout>
-    </appender>
-
-    <!--这里替换成AspectLog4jAsyncAppender-->
-    <appender name="AlarmLog" class="com.future94.alarm.log.core.enhance.log4j.AlarmLogLog4jAsyncAppender">
-        <param name="doWarnException" value="false"/>
-        <param name="warnExceptionExtend" value="java.lang.Exception,java.lang.RuntimeException"/>
-        <appender-ref ref="Console"/>
-    </appender>
-
-    <appender name="AsyncConsole" class="org.apache.log4j.AsyncAppender">
-        <appender-ref ref="Console"/>
-    </appender>
-
-    <appender name="AsyncAlarmLog" class="org.apache.log4j.AsyncAppender">
-        <appender-ref ref="AlarmLog"/>
-    </appender>
-
-    <root>
-        <priority value="info" />
-        <appender-ref ref="AsyncConsole"/>
-        <appender-ref ref="AsyncAlarmLog"/>
-    </root>
-</log4j:configuration>
-```
-
-- **log4j2** : 配置项说明见[3.3.3 日志配置中设置](#333-日志配置中设置)
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration debug="true">
-    <!--先定义所有的appender-->
-    <appenders>
-        <!--控制台日志-->
-        <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
-        </Console>
-
-        <AlarmLog name="AlarmLog">
-            <warnExceptionExtend>false</warnExceptionExtend>
-            <doWarnException>java.lang.Exception,java.lang.RuntimeException</doWarnException>
-        </AlarmLog>
-
-        <!--异步输出到控制台-->
-        <Async name="AsyncConsole">
-            <AppenderRef ref="Console"/>
-        </Async>
-
-        <!--异步-->
-        <Async name="AsyncAlarmLog">
-            <AppenderRef ref="AlarmLog"/>
-        </Async>
-
-    </appenders>
-    <!--然后定义logger，只有定义了logger并引入的appender，appender才会生效-->
-    <loggers>
-        <root level="INFO">
-            <appender-ref ref="AsyncConsole"/>
-            <!-- AlarmLog 处理有打印INFO级别的日志，如果level是INFO级别会循环调用，抛出 ERROR Recursive call to appender ALARM_LOG，所以最好将ALARM_LOG 的级别设置为ERROR -->
-            <appender-ref ref="AsyncAlarmLog" level="ERROR" />
-        </root>
-    </loggers>
-</configuration>
-```
-
-- **logback** : 配置项说明见[3.3.3 日志配置中设置](#333-日志配置中设置)
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration debug="true">
-
-    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
-    <appender name="AlarmLog" class="com.future94.alarm.log.core.enhance.logback.AlarmLogLogbackAsyncAppender">
-        <warnExceptionExtend>false</warnExceptionExtend>
-        <doWarnException>java.lang.Exception,java.lang.RuntimeException</doWarnException>
-        <appender-ref ref="Console"/>
-    </appender>
-
-    <appender name="AsyncConsole" class="ch.qos.logback.classic.AsyncAppender">
-        <discardingThreshold>0</discardingThreshold>
-        <appender-ref ref="Console"/>
-    </appender>
-
-
-    <appender name="AsyncAlarmLog" class="ch.qos.logback.classic.AsyncAppender">
-        <discardingThreshold>0</discardingThreshold>
-        <appender-ref ref="AlarmLog"/>
-    </appender>
-
-
-    <root level="INFO">
-        <appender-ref ref="AsyncConsole" />
-        <appender-ref ref="AsyncAlarmLog" level="ERROR" />
-    </root>
-</configuration>
-```
-
-### 3.3 提供多种方式获取指定的日志异常信息
-
-#### 3.3.1 系统全局配置
-- spring.alarm-log.**do-warn-exception** : 获取日志中指定的异常类全路径信息，类型为List.
-- spring.alarm-log.**warn-exception-extend** : 获取日志中指定异常信息是否启动继承判断。如：do-warn-exception为java.lang.Throwable，warn-exception-extend为true，则所有java.lang.Throwable的子类（java.lang.Exception、java.lang.RuntimeException、java.io.IOException等）都会触发警告事件。
-```xml
-<bean id="alarmLogConfigContext" class="com.future94.alarm.log.common.context.AlarmLogContext">
-    <property name="warnExceptionExtend" value="true" />
-    <property name="doWarnExceptionList">
-        <list>
-            <value>java.lang.Exception</value>
-            <value>java.lang.RuntimeException</value>
-        </list>
-    </property>
-</bean>
-```
-
-#### 3.3.2 继承、实现指定类
-- com.future94.alarm.log.common.exception.**AlarmLogException** : 此类继承java.lang.Exception类，继承AlarmLogException类，即当日志事件中抛出此时触发警告事件。
-
-- com.future94.alarm.log.common.exception.**AlarmLogRuntimeException** : 此类继承java.lang.RuntimeException类，继承AlarmLogException类，即当日志事件中抛出此时触发警告事件。
-
-- com.future94.alarm.log.common.exception.**AlarmLogDoWarnException** : 实现AlarmLogDoWarnException接口，即当日志事件中抛出此时触发警告事件。<font color="red">注意：目前此接口还需要是java.lang.Throwable子类，以后会修改此限制。由于java是单继承，目前项目中不方便继承AlarmLog异常时，可以使用实现此接口的方式</font>。
-
-#### 3.3.3 日志配置中设置
-
-- **log4j** : doWarnException、warnExceptionExtend配置意义与上面一致。
-```xml
-<appender name="AlarmLog" class="com.future94.alarm.log.core.enhance.log4j.AlarmLogLog4jAsyncAppender">
-    <param name="doWarnException" value="false"/>
-    <param name="warnExceptionExtend" value="java.lang.Exception,java.lang.RuntimeException"/>
+<appender name="AlarmLog" class="io.github.future0923.alarm.log.core.enhance.logback.AlarmLogLogbackAsyncAppender">
+    <doWarnException>java.lang.Exception,java.lang.RuntimeException</doWarnException>
+    <warnExceptionExtend>true</warnExceptionExtend>
+    <includeCallerData>true</includeCallerData>
     <appender-ref ref="Console"/>
 </appender>
 ```
 
-- **log4j2** :  doWarnException、warnExceptionExtend配置意义与上面一致。<font color="red">注意：标签必须为AlarmLog，name属性可以随意</font>。
-```xml
-<AlarmLog name="AlarmLog">
-    <warnExceptionExtend>false</warnExceptionExtend>
-    <doWarnException>java.lang.Exception,java.lang.RuntimeException</doWarnException>
-</AlarmLog>
-```
+### Log4j 1.x
 
-- **logback** : doWarnException、warnExceptionExtend配置意义与上面一致。
 ```xml
-<appender name="AlarmLog" class="com.future94.alarm.log.core.enhance.logback.AlarmLogLogbackAsyncAppender">
-    <warnExceptionExtend>false</warnExceptionExtend>
-    <doWarnException>java.lang.Exception,java.lang.RuntimeException</doWarnException>
+<appender name="AlarmLog" class="io.github.future0923.alarm.log.core.enhance.log4j.AlarmLogLog4jAsyncAppender">
+    <param name="doWarnException" value="java.lang.Exception,java.lang.RuntimeException"/>
+    <param name="warnExceptionExtend" value="true"/>
     <appender-ref ref="Console"/>
 </appender>
 ```
 
-#### 3.3.4 使用@Alarm注解
+### Log4j2
 
-需要引入如下依赖
+Log4j2 的标签名必须是 `AlarmLog`。
+
+```xml
+<AlarmLog name="AlarmLog"
+          doWarnException="java.lang.Exception,java.lang.RuntimeException"
+          warnExceptionExtend="true"/>
+```
+
+为了避免告警 Appender 自身日志造成递归调用，建议只把 `AlarmLog` 挂在 `ERROR` 级别：
+
+```xml
+<root level="INFO">
+    <appender-ref ref="Console"/>
+    <appender-ref ref="AlarmLog" level="ERROR"/>
+</root>
+```
+
+完整同步/异步配置可以参考 `alarm-log-examples` 下对应日志框架的示例模块。
+
+## 使用 `@Alarm`
+
+Spring Boot starter 已包含 `alarm-log-aspect`。Spring MVC 或手动集成时需要额外引入：
+
 ```xml
 <dependency>
-    <groupId>com.future94</groupId>
+    <groupId>io.github.future0923</groupId>
     <artifactId>alarm-log-aspect</artifactId>
     <version>${latest.version}</version>
 </dependency>
 ```
-并启动aop，保证可以扫描到`com.future94.alarm.log.aspect`包
-```xml
-<context:component-scan base-package="com.future94.alarm.log" />
-<aop:aspectj-autoproxy />
-<mvc:annotation-driven />
-<aop:aspectj-autoproxy proxy-target-class="true" />
-<aop:config proxy-target-class="true"/>
-```
 
-- doWarnException、warnExceptionExtend配置意义与上面一致。
-- 注解加载类上时，注解设置作用域为当前类，只对当前类生效。
-- 注解加载方法上时，注解设置作用域为当前方法，只对当前方法生效。
-```java
-@Target({ElementType.TYPE, ElementType.METHOD})
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-public @interface Alarm {
+`@Alarm` 可以标在类或方法上。标在类上时，对当前类的方法生效；标在方法上时，只对当前方法生效。
 
-    Class<? extends Throwable>[] doWarnException() default {Throwable.class};
-
-    boolean warnExceptionExtend() default false;
-}
-```
-
-**示例** ：
-- test1只有在抛出Exception时候才会触发。
-- test2当抛出TestAspectException或者Exception时都会触发。
 ```java
 @RestController
-@Alarm(doWarnException = Exception.class, warnExceptionExtend = false)
+@Alarm(doWarnException = Exception.class, warnExceptionExtend = true)
 public class TestController {
 
     @GetMapping("/test1")
     public void test1() {
-        logger.error("test4", new TestAspectException());
+        throw new IllegalStateException("test1 failed");
     }
 
     @GetMapping("/test2")
     @Alarm(doWarnException = TestAspectException.class, warnExceptionExtend = false)
-    public void test1() {
-        logger.error("test2", new TestAspectException());
+    public void test2() throws TestAspectException {
+        throw new TestAspectException();
     }
-
 }
 ```
 
-### 3.4 提供多种监控通知方式
+说明：
 
-多种方式可以同时使用，将其对应的bean添加到AlarmLogWarnServiceFactory即可。
+- `test1` 会触发告警，因为 `IllegalStateException` 是 `Exception` 的子类。
+- `test2` 只在抛出 `TestAspectException` 本身时触发告警。
+- `@Alarm` 捕获异常后仍会重新抛出原始异常，不会改变业务异常传播。
+
+## Spring MVC 接入
+
+Spring MVC 项目至少需要引入核心模块和需要的通知模块。
 
 ```xml
-<bean id="factory" class="com.future94.alarm.log.warn.common.factory.AlarmLogWarnServiceFactory">
+<dependency>
+    <groupId>io.github.future0923</groupId>
+    <artifactId>alarm-log-core</artifactId>
+    <version>${latest.version}</version>
+</dependency>
+<dependency>
+    <groupId>io.github.future0923</groupId>
+    <artifactId>alarm-log-warn-dingtalk</artifactId>
+    <version>${latest.version}</version>
+</dependency>
+```
+
+在 Spring XML 中初始化异常匹配和通知服务：
+
+```xml
+<bean id="alarmLogConfigContext" class="io.github.future0923.alarm.log.common.context.AlarmLogContext">
+    <property name="warnExceptionExtend" value="true"/>
+    <property name="doWarnExceptionList">
+        <list>
+            <value>java.lang.Exception</value>
+        </list>
+    </property>
+    <property name="maxRetryTimes" value="3"/>
+    <property name="retrySleepMillis" value="1000"/>
+</bean>
+
+<bean id="dingtalkWarnService" class="io.github.future0923.alarm.log.warn.dingtalk.DingtalkWarnService">
+    <constructor-arg index="0" value="${alarmLog.warn.dingtalk.token}"/>
+    <constructor-arg index="1" value="${alarmLog.warn.dingtalk.secret}"/>
+</bean>
+
+<bean id="alarmLogWarnServiceFactory" class="io.github.future0923.alarm.log.warn.common.factory.AlarmLogWarnServiceFactory">
     <constructor-arg>
         <list>
-            <ref bean="mailWarnService" />
-            <ref bean="dingtalkWarnService" />
-            <ref bean="workWeixinWarnService" />
+            <ref bean="dingtalkWarnService"/>
         </list>
     </constructor-arg>
 </bean>
 ```
 
-#### 3.4.1 邮件
-```xml
-<bean id="mailWarnService" class="com.future94.alarm.log.warn.mail.MailWarnService">
-        <constructor-arg index="0" value="${alarmLog.warn.mail.smtpHost}"/>
-        <constructor-arg index="1" value="${alarmLog.warn.mail.smtpPort}"/>
-        <!--多个用逗号分割-->
-        <constructor-arg index="2" value="${alarmLog.warn.mail.to}"/>
-        <constructor-arg index="3" value="${alarmLog.warn.mail.from}"/>
-        <constructor-arg index="4" value="${alarmLog.warn.mail.username}"/>
-        <constructor-arg index="5" value="${alarmLog.warn.mail.password}"/>
-</bean>
-
-<bean id="factory" class="com.future94.alarm.log.warn.common.factory.AlarmLogWarnServiceFactory">
-    <constructor-arg>
-        <list>
-            <ref bean="mailWarnService" />
-        </list>
-    </constructor-arg>
-</bean>
-```
-
-#### 3.4.2 企业微信
+如果要使用 `@Alarm`，还需要扫描切面包并开启 AOP：
 
 ```xml
-<bean id="workWeixinWarnService" class="com.future94.alarm.log.warn.workweixin.WorkWeixinWarnService">
-    <!--多个用逗号分割-->
-    <constructor-arg index="0" value="${alarmLog.warn.workweixin.to}"/>
-    <constructor-arg index="1" value="${alarmLog.warn.workweixin.applicationId}"/>
-    <constructor-arg index="2" value="${alarmLog.warn.workweixin.corpid}"/>
-    <constructor-arg index="3" value="${alarmLog.warn.workweixin.corpsecret}"/>
-</bean>
-
-<bean id="factory" class="com.future94.alarm.log.warn.common.factory.AlarmLogWarnServiceFactory">
-    <constructor-arg>
-        <list>
-            <ref bean="workWeixinWarnService" />
-        </list>
-    </constructor-arg>
-</bean>
+<context:component-scan base-package="io.github.future0923.alarm.log"/>
+<aop:aspectj-autoproxy proxy-target-class="true"/>
 ```
 
-#### 3.4.3 钉钉群
+## 自定义告警内容
 
-```xml
-<bean id="dingtalkWarnService" class="com.future94.alarm.log.warn.dingtalk.DingtalkWarnService">
-        <constructor-arg index="0" value="${alarmLog.warn.dingtalk.token}"/>
-        <constructor-arg index="1" value="${alarmLog.warn.dingtalk.secret}"/>
-    </bean>
+实现 `AlarmMessageContext` 可以完全自定义告警内容；继承 `DefaultAlarmMessageContext` 可以只覆盖某个通道。
 
-<bean id="factory" class="com.future94.alarm.log.warn.common.factory.AlarmLogWarnServiceFactory">
-    <constructor-arg>
-        <list>
-            <ref bean="dingtalkWarnService" />
-        </list>
-    </constructor-arg>
-</bean>
-```
+Spring Boot 中把实现类声明为 Bean 即可：
 
-### 3.5 配置警告消息发送异常重试
-
-- maxRetryTimes : 最大重试次数
-- retrySleepMillis : 每次重试等待间隔，最终效果【retrySleepMillis * ( 1 << maxRetryTimes )】
-```xml
-<bean id="alarmLogConfigContext" class="com.future94.alarm.log.common.context.AlarmLogContext">
-    <property name="maxRetryTimes" value="1" />
-    <property name="retrySleepMillis" value="3000" />
-</bean>
-```
-
-## 4. 自定义发送信息内容
-
-### 4.1 自定义发送内容
-- 实现`com.future94.alarm.log.common.context.AlarmMessageContext`接口
-- 继承`com.future94.alarm.log.common.context.DefaultAlarmMessageContext`类
-
-如果你想自定义所有报警发送的内容，你可以实现`AlarmMessageContext`接口，如果你只想自定义指定渠道的内容，你可以继承`DefaultAlarmMessageContext`类.
-
-### 4.2 框架识别
-
-#### 4.2.1 SpringBoot
 ```java
 @Component
-public class CustomAlarmMessageContext1 implements AlarmMessageContext {
-
-    @Override
-    public String workWeixinContent(AlarmInfoContext context, Throwable throwable, AlarmLogSimpleConfig config) {
-        // TODO send content
-        return null;
-    }
+public class CustomAlarmMessageContext extends DefaultAlarmMessageContext {
 
     @Override
     public String dingtalkContent(AlarmInfoContext context, Throwable throwable, AlarmLogSimpleConfig config) {
-        // TODO send content
-        return null;
-    }
-
-    @Override
-    public AlarmMailContent mailContent(AlarmInfoContext context, Throwable throwable, AlarmLogSimpleConfig config) {
-        // TODO send content
-        return null;
+        return "告警：" + context.getThrowableName() + " - " + context.getMessage();
     }
 }
 ```
 
-#### 4.2.2 SpringMVC
+Spring MVC 或非 Spring 环境可以手动注入：
 
-需要注入到AlarmLogContext中，像下面这样。
 ```java
-@Component
-public class CustomAlarmMessageContext1 implements AlarmMessageContext, InitializingBean {
-
-    @Override
-    public String workWeixinContent(AlarmInfoContext context, Throwable throwable, AlarmLogSimpleConfig config) {
-        // TODO send content
-        return null;
-    }
-
-    @Override
-    public String dingtalkContent(AlarmInfoContext context, Throwable throwable, AlarmLogSimpleConfig config) {
-        // TODO send content
-        return null;
-    }
-
-    @Override
-    public AlarmMailContent mailContent(AlarmInfoContext context, Throwable throwable, AlarmLogSimpleConfig config) {
-        // TODO send content
-        return null;
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        AlarmLogContext.setAlarmMessageContext(this);
-    }
-}
+AlarmLogContext.setAlarmMessageContext(new CustomAlarmMessageContext());
 ```
 
-或者在xml中配置。
+## 手动打印并触发告警
 
-```xml
-<bean id="context1" class="com.future94.alarm.log.examples.spring.mvc.log4j.bean.CustomAlarmMessageContext1" />
+如果希望通过工具类主动打印日志并发送告警，可以使用 `AlarmLogHelper`：
 
-<bean id="alarmLogConfigContext" class="com.future94.alarm.log.common.context.AlarmLogContext">
-    <property name="alarmMessageContext" ref="context1"/>
-</bean>
-```
-
-#### 4.2.3 非Spring
-
-将自定义内容注入到AlarmLogContext中即可。
 ```java
-AlarmLogContext.setAlarmMessageContext(new AlarmMessageContext());
+AlarmLogHelper.getPrintLogInstance(true).error("create order failed", exception);
 ```
 
+`getPrintLogInstance()` 默认只打印日志；`getPrintLogInstance(true)` 会同时执行告警判断和发送。
 
-## 5. 打印日志
-如果在非error日志时也想打印日志并且发送警告通知，可以使用下面的帮助类。
+## 示例工程
 
-`AlarmLogHelper.getPrintLogInstance()`，默认不发送消息，如果发送报警消息，可以使用`AlarmLogHelper.getPrintLogInstance(true)`。
-
-eg:
-```java
-AlarmLogHelper.getPrintLogInstance().error("123");
-AlarmLogHelper.getPrintLogInstance().error("123:{}", 456, new RuntimeException());
-AlarmLogHelper.getPrintLogInstance(true).error("123");
-AlarmLogHelper.getPrintLogInstance(true).error("123:{}", 456, new RuntimeException());
-```
+- Spring Boot 示例：`alarm-log-examples/alarm-log-examples-spring-boot`
+- Spring MVC 示例：`alarm-log-examples/alarm-log-examples-spring-mvc`
+- 每个示例下分别提供 Logback、Log4j 1.x、Log4j2 的配置文件。

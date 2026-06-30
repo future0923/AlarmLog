@@ -7,7 +7,7 @@
     </appender>
 
     <!--这里替换成AspectLog4jAsyncAppender-->
-    <appender name="AlarmLog" class="com.future94.alarm.log.core.enhance.log4j.AlarmLogLog4jAsyncAppender">
+    <appender name="AlarmLog" class="io.github.future0923.alarm.log.core.enhance.log4j.AlarmLogLog4jAsyncAppender">
         <param name="warnExceptionExtend" value="false"/>
         <param name="doWarnException" value="java.lang.Exception,java.lang.RuntimeException"/>
     </appender>

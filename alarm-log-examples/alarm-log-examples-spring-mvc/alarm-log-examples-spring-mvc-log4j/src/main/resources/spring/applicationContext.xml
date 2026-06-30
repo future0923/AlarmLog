@@ -9,7 +9,7 @@
 
     <context:property-placeholder location="classpath:profile/application.properties"/>
 
-<!--    <bean id="mailWarnService" class="com.future94.alarm.log.warn.mail.MailWarnService">-->
+<!--    <bean id="mailWarnService" class="io.github.future0923.alarm.log.warn.mail.MailWarnService">-->
 <!--            <constructor-arg index="0" value="${alarmLog.warn.mail.smtpHost}"/>-->
 <!--            <constructor-arg index="1" value="${alarmLog.warn.mail.smtpPort}"/>-->
 <!--            <constructor-arg index="2" value="${alarmLog.warn.mail.to}"/>-->
@@ -18,19 +18,19 @@
 <!--            <constructor-arg index="5" value="${alarmLog.warn.mail.password}"/>-->
 <!--    </bean>-->
 
-<!--    <bean id="dingtalkWarnService" class="com.future94.alarm.log.warn.dingtalk.DingtalkWarnService">-->
+<!--    <bean id="dingtalkWarnService" class="io.github.future0923.alarm.log.warn.dingtalk.DingtalkWarnService">-->
 <!--        <constructor-arg index="0" value="${alarmLog.warn.dingtalk.token}"/>-->
 <!--        <constructor-arg index="1" value="${alarmLog.warn.dingtalk.secret}"/>-->
 <!--    </bean>-->
 
-<!--    <bean id="workWeixinWarnService" class="com.future94.alarm.log.warn.workweixin.WorkWeixinWarnService">-->
+<!--    <bean id="workWeixinWarnService" class="io.github.future0923.alarm.log.warn.workweixin.WorkWeixinWarnService">-->
 <!--        <constructor-arg index="0" value="${alarmLog.warn.workweixin.to}"/>-->
 <!--        <constructor-arg index="1" value="${alarmLog.warn.workweixin.applicationId}"/>-->
 <!--        <constructor-arg index="2" value="${alarmLog.warn.workweixin.corpid}"/>-->
 <!--        <constructor-arg index="3" value="${alarmLog.warn.workweixin.corpsecret}"/>-->
 <!--    </bean>-->
 
-<!--    <bean id="factory" class="com.future94.alarm.log.warn.common.factory.AlarmLogWarnServiceFactory">-->
+<!--    <bean id="factory" class="io.github.future0923.alarm.log.warn.common.factory.AlarmLogWarnServiceFactory">-->
 <!--        <constructor-arg>-->
 <!--            <list>-->
 <!--                <ref bean="mailWarnService" />-->
@@ -40,12 +40,12 @@
 <!--        </constructor-arg>-->
 <!--    </bean>-->
 
-<!--    <bean id="context1" class="com.future94.alarm.log.examples.spring.mvc.log4j.bean.CustomAlarmMessageContext1" />-->
+<!--    <bean id="context1" class="io.github.future0923.alarm.log.examples.spring.mvc.log4j.bean.CustomAlarmMessageContext1" />-->
 
-<!--    <bean id="context2" class="com.future94.alarm.log.examples.spring.mvc.log4j.bean.CustomAlarmMessageContext2" />-->
+<!--    <bean id="context2" class="io.github.future0923.alarm.log.examples.spring.mvc.log4j.bean.CustomAlarmMessageContext2" />-->
 
 
-<!--    <bean id="alarmLogConfigContext" class="com.future94.alarm.log.common.context.AlarmLogContext">-->
+<!--    <bean id="alarmLogConfigContext" class="io.github.future0923.alarm.log.common.context.AlarmLogContext">-->
 <!--        <property name="maxRetryTimes" value="1" />-->
 <!--        <property name="retrySleepMillis" value="3000" />-->
 <!--        <property name="printStackTrace" value="true" />-->

@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>alarm-log-examples</artifactId>
-        <groupId>com.future94</groupId>
-        <version>1.0.1.SNAPSHOT</version>
+        <groupId>io.github.future0923</groupId>
+        <version>1.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 

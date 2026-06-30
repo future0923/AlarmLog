@@ -4,14 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.future94</groupId>
+    <groupId>io.github.future0923</groupId>
     <artifactId>alarm-log</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.1.SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
 
     <name>alarm-log</name>
     <description>a lightweight log exception alert framework</description>
-    <url>https://github.com/future94/alarm-log</url>
+    <url>https://github.com/future0923/AlarmLog</url>
 
     <licenses>
         <license>
@@ -22,22 +22,22 @@
     </licenses>
 
     <scm>
-        <url>https://github.com/future94/alarm-log</url>
-        <connection>scm:git:https://github.com/future94/alarm-log.git</connection>
-        <developerConnection>scm:git:https://github.com/future94/alarm-log.git</developerConnection>
+        <url>https://github.com/future0923/AlarmLog</url>
+        <connection>scm:git:https://github.com/future0923/AlarmLog.git</connection>
+        <developerConnection>scm:git:https://github.com/future0923/AlarmLog.git</developerConnection>
         <tag>${project.version}</tag>
     </scm>
 
     <issueManagement>
         <system>GitHub Issues</system>
-        <url>https://github.com/future94/alarm-log/issues</url>
+        <url>https://github.com/future0923/AlarmLog/issues</url>
     </issueManagement>
 
     <developers>
         <developer>
-            <id>future94</id>
+            <id>future0923</id>
             <name>wei lai</name>
-            <url>https://github.com/future94</url>
+            <url>https://github.com/future0923</url>
         </developer>
     </developers>
 

@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>alarm-log-examples-spring-mvc</artifactId>
-        <groupId>com.future94</groupId>
-        <version>1.0.1.SNAPSHOT</version>
+        <groupId>io.github.future0923</groupId>
+        <version>1.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -15,22 +15,22 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.future94</groupId>
+            <groupId>io.github.future0923</groupId>
             <artifactId>alarm-log-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.future94</groupId>
+            <groupId>io.github.future0923</groupId>
             <artifactId>alarm-log-warn-mail</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.future94</groupId>
+            <groupId>io.github.future0923</groupId>
             <artifactId>alarm-log-warn-dingtalk</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.future94</groupId>
+            <groupId>io.github.future0923</groupId>
             <artifactId>alarm-log-warn-workweixin</artifactId>
             <version>${project.version}</version>
         </dependency>
