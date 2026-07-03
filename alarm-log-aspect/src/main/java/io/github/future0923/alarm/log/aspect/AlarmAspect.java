@@ -36,8 +36,7 @@ public class AlarmAspect {
         Alarm alarmClass = signature.getMethod().getDeclaringClass().getAnnotation(Alarm.class);
         if (doWarnProcess(alarmMethod, ex)
                 || doWarnProcess(alarmClass, ex)
-                || AlarmLogContext.doWarnException(ex)
-                || ExceptionUtils.doWarnExceptionInstance(ex)) {
+                || AlarmLogContext.shouldWarnException(ex)) {
             String threadName = Thread.currentThread().getName();
             StackTraceElement stackTraceElement = ex.getStackTrace()[0];
             AlarmLogDispatcher.dispatch(
@@ -60,15 +59,23 @@ public class AlarmAspect {
         if (Objects.isNull(alarm)) {
             return false;
         }
-        Class<? extends Throwable>[] doExtendWarnExceptionClasses = alarm.doWarnException();
-        if (alarm.warnExceptionExtend()) {
-            return ExceptionUtils.doWarnExceptionExtend(ex, Arrays.asList(doExtendWarnExceptionClasses));
+        Class<? extends Throwable>[] excludeExceptionClasses = alarm.excludeException();
+        if (matchAnnotationException(ex, excludeExceptionClasses, alarm.excludeExceptionExtend())) {
+            return false;
+        }
+        Class<? extends Throwable>[] includeExceptionClasses = alarm.includeException();
+        return matchAnnotationException(ex, includeExceptionClasses, alarm.includeExceptionExtend());
+    }
+
+    private boolean matchAnnotationException(Throwable ex, Class<? extends Throwable>[] exceptionClasses, boolean extend) {
+        if (extend) {
+            return ExceptionUtils.matchExceptionExtend(ex, Arrays.asList(exceptionClasses));
         } else {
-            List<String> doWarnExceptionList = new ArrayList<>(doExtendWarnExceptionClasses.length);
-            for (Class<? extends Throwable> exceptionClass : doExtendWarnExceptionClasses) {
-                doWarnExceptionList.add(exceptionClass.getName());
+            List<String> exceptionList = new ArrayList<>(exceptionClasses.length);
+            for (Class<? extends Throwable> exceptionClass : exceptionClasses) {
+                exceptionList.add(exceptionClass.getName());
             }
-            return ExceptionUtils.doWarnExceptionName(ex, doWarnExceptionList);
+            return ExceptionUtils.matchExceptionName(ex, exceptionList);
         }
     }
 }

@@ -8,8 +8,10 @@
 
     <!--这里替换成AspectLog4jAsyncAppender-->
     <appender name="AlarmLog" class="io.github.future0923.alarm.log.core.enhance.log4j.AlarmLogLog4jAsyncAppender">
-        <param name="warnExceptionExtend" value="false"/>
-        <param name="doWarnException" value="java.lang.Exception,java.lang.RuntimeException"/>
+        <param name="includeExceptionExtend" value="false"/>
+        <param name="includeException" value="java.lang.Exception,java.lang.RuntimeException"/>
+        <param name="excludeExceptionExtend" value="false"/>
+        <param name="excludeException" value="java.io.FileNotFoundException"/>
     </appender>
 
     <appender name="AsyncConsole" class="org.apache.log4j.AsyncAppender">

@@ -20,7 +20,21 @@ public class AlarmLogConfig {
 
     private Boolean simpleWarnInfo = false;
 
-    private Boolean warnExceptionExtend = false;
+    private ExceptionConfig exception = new ExceptionConfig();
 
-    private List<String> doWarnException;
+    @Data
+    public static class ExceptionConfig {
+
+        private ExceptionMatcherConfig include = new ExceptionMatcherConfig();
+
+        private ExceptionMatcherConfig exclude = new ExceptionMatcherConfig();
+    }
+
+    @Data
+    public static class ExceptionMatcherConfig {
+
+        private List<String> classes;
+
+        private Boolean extend = false;
+    }
 }

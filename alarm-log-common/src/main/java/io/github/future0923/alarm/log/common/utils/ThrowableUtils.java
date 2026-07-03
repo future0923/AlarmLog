@@ -19,7 +19,7 @@ public class ThrowableUtils {
     }
 
     public static String dingtalkContent(AlarmInfoContext context, Throwable throwable) {
-        return defaultContent(context, throwable, SEPARATOR);
+        return dingtalkMarkdownContent(context, throwable);
     }
 
     public static AlarmMailContent mailSubjectContent(AlarmInfoContext context, Throwable throwable) {
@@ -42,6 +42,60 @@ public class ThrowableUtils {
             stringBuilder.append(printTrace(throwable));
         }
         return stringBuilder.toString();
+    }
+
+    private static String dingtalkMarkdownContent(AlarmInfoContext context, Throwable throwable) {
+        StringBuilder stringBuilder = new StringBuilder();
+        String level = nullToEmpty(context.getLevel());
+        stringBuilder.append("## ").append(nullToEmpty(context.getMessage())).append(SEPARATOR).append(SEPARATOR);
+        stringBuilder.append("---").append(SEPARATOR).append(SEPARATOR);
+        if (!AlarmLogContext.getSimpleWarnInfo()) {
+            stringBuilder.append("### Runtime").append(SEPARATOR).append(SEPARATOR);
+            stringBuilder.append("| Field | Value |").append(SEPARATOR);
+            stringBuilder.append("| --- | --- |").append(SEPARATOR);
+            stringBuilder.append("| **Level** | ").append(level).append(" |").append(SEPARATOR);
+            if (Objects.nonNull(context.getThrowableName())) {
+                stringBuilder.append("| **Throwable** | ").append(markdownTableValue(context.getThrowableName())).append(" |").append(SEPARATOR);
+            }
+            if (Objects.nonNull(throwable) && Objects.nonNull(throwable.getMessage())) {
+                stringBuilder.append("| **Message** | ").append(markdownTableValue(throwable.getMessage())).append(" |").append(SEPARATOR);
+            }
+            stringBuilder.append("| **Thread** | ").append(markdownTableValue(context.getThreadName())).append(" |").append(SEPARATOR);
+            stringBuilder.append(SEPARATOR);
+            stringBuilder.append("### Source").append(SEPARATOR).append(SEPARATOR);
+            stringBuilder.append("```text").append(SEPARATOR);
+            stringBuilder.append(location(context)).append(SEPARATOR);
+            stringBuilder.append("```").append(SEPARATOR).append(SEPARATOR);
+        }
+        return stringBuilder.toString();
+    }
+
+    private static String location(AlarmInfoContext context) {
+        return nullToEmpty(context.getClassName()) + "." + nullToEmpty(context.getMethodName()) + source(context);
+    }
+
+    private static String source(AlarmInfoContext context) {
+        if (isNativeMethod(context.getLineNumber())) {
+            return "(Native Method)";
+        }
+        if (context.getFileName() != null && context.getLineNumber() >= 0) {
+            return "(" + context.getFileName() + ":" + context.getLineNumber() + ")";
+        }
+        if (context.getFileName() != null) {
+            return "(" + context.getFileName() + ")";
+        }
+        return "(Unknown Source)";
+    }
+
+    private static String nullToEmpty(String value) {
+        return value == null ? "" : value;
+    }
+
+    private static String markdownTableValue(String value) {
+        return nullToEmpty(value)
+                .replace("\r", " ")
+                .replace("\n", " ")
+                .replace("|", "\\|");
     }
 
     private static String printTrace(Throwable throwable) {

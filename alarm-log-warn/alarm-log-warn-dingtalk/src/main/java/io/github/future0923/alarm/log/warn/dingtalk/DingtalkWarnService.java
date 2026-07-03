@@ -3,7 +3,6 @@ package io.github.future0923.alarm.log.warn.dingtalk;
 import io.github.future0923.alarm.log.common.context.AlarmInfoContext;
 import io.github.future0923.alarm.log.common.context.AlarmLogContext;
 import io.github.future0923.alarm.log.common.utils.OkHttpUtils;
-import io.github.future0923.alarm.log.common.utils.ThrowableUtils;
 import io.github.future0923.alarm.log.warn.common.BaseWarnService;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
@@ -36,10 +35,14 @@ public class DingtalkWarnService extends BaseWarnService {
     }
 
     public String sendRobotMessage(String message) throws Exception {
+        return OkHttpUtils.getInstance().post(getSign(), createPostData(message));
+    }
+
+    String createPostData(String message) {
         DingtalkSendParam param = new DingtalkSendParam();
-        param.setMsgtype(DingtalkSendMsgTypeEnum.TEXT.getType());
-        param.setText(new DingtalkSendParam.Text(message));
-        return OkHttpUtils.getInstance().post(getSign(), gson.toJson(param));
+        param.setMsgtype(DingtalkSendMsgTypeEnum.MARKDOWN.getType());
+        param.setMarkdown(new DingtalkSendParam.Markdown("Alarm Log", message));
+        return gson.toJson(param);
     }
 
     /**
@@ -59,6 +62,5 @@ public class DingtalkWarnService extends BaseWarnService {
     protected void doSend(AlarmInfoContext context, Throwable throwable) throws Exception {
         String resp = sendRobotMessage(AlarmLogContext.getAlarmMessageContext().dingtalkContent(context, throwable, AlarmLogContext.getSimpleConfig()));
         logger.info("send dingtalk message resp:{}", resp);
-        throw new RuntimeException();
     }
 }

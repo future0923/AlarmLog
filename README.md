@@ -22,9 +22,15 @@ Spring Boot 项目推荐直接使用 starter。
 ```yaml
 spring:
   alarm-log:
-    do-warn-exception:
-      - java.lang.Exception
-    warn-exception-extend: true
+    exception:
+      include:
+        classes:
+          - java.lang.Exception
+        extend: true
+      exclude:
+        classes:
+          - java.io.FileNotFoundException
+        extend: false
     warn:
       dingtalk:
         enabled: true
@@ -61,25 +67,31 @@ log.error("create order failed", exception);
 
 ## 告警触发规则
 
-一个异常满足以下任一条件时会触发告警：
+一个异常先经过排除规则，再经过包含规则。命中 `exclude` 时不告警；未命中 `exclude` 且满足以下任一条件时会触发告警：
 
-1. 异常类在 `do-warn-exception` 中配置。
-2. `warn-exception-extend=true`，且异常是 `do-warn-exception` 中任一类的子类。
+1. 异常类在 `exception.include.classes` 中配置。
+2. `exception.include.extend=true`，且异常是 `exception.include.classes` 中任一类的子类。
 3. 异常继承 `AlarmLogException` 或 `AlarmLogRuntimeException`。
 4. 异常实现 `AlarmLogDoWarnException` 接口。
 5. 方法或类标注了 `@Alarm`，且抛出的异常命中注解配置。
 
-### 精确匹配和继承匹配
+### 包含、排除和继承匹配
 
 ```yaml
 spring:
   alarm-log:
-    do-warn-exception:
-      - java.lang.Exception
-    warn-exception-extend: false
+    exception:
+      include:
+        classes:
+          - java.lang.Exception
+        extend: true
+      exclude:
+        classes:
+          - java.io.FileNotFoundException
+        extend: false
 ```
 
-`warn-exception-extend=false` 时只匹配 `java.lang.Exception` 本身。若改为 `true`，则 `RuntimeException`、`IOException` 等 `Exception` 子类也会触发告警。
+`include.extend=false` 时只匹配 `classes` 中配置的异常本身；改为 `true` 后会匹配子类。`exclude.extend` 独立控制排除规则是否匹配子类。排除规则优先级最高，也可以排除标记异常。
 
 ### 使用标记异常
 
@@ -99,8 +111,10 @@ public class BizException extends AlarmLogRuntimeException {
 
 | 配置项 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| `spring.alarm-log.do-warn-exception` | `List<String>` | 空 | 需要触发告警的异常类全限定名 |
-| `spring.alarm-log.warn-exception-extend` | `Boolean` | `false` | 是否按继承关系匹配异常 |
+| `spring.alarm-log.exception.include.classes` | `List<String>` | 空 | 需要触发告警的异常类全限定名 |
+| `spring.alarm-log.exception.include.extend` | `Boolean` | `false` | 包含规则是否按继承关系匹配异常 |
+| `spring.alarm-log.exception.exclude.classes` | `List<String>` | 空 | 需要排除告警的异常类全限定名 |
+| `spring.alarm-log.exception.exclude.extend` | `Boolean` | `false` | 排除规则是否按继承关系匹配异常 |
 | `spring.alarm-log.max-retry-times` | `Integer` | `3` | 告警发送失败后的最大重试次数 |
 | `spring.alarm-log.retry-sleep-millis` | `Integer` | `1000` | 重试等待基准时间，实际等待会按次数递增 |
 | `spring.alarm-log.print-stack-trace` | `Boolean` | `false` | 告警内容是否包含堆栈 |
@@ -154,7 +168,7 @@ spring:
 
 ## 日志框架配置
 
-`doWarnException` 和 `warnExceptionExtend` 既可以写在 Spring 全局配置中，也可以写在 Appender 上。Appender 上的配置会写入全局 `AlarmLogContext`，因此同一进程内会影响所有后续告警判断。
+`includeException`、`includeExceptionExtend`、`excludeException` 和 `excludeExceptionExtend` 既可以写在 Spring 全局配置中，也可以写在 Appender 上。Appender 上的配置会写入全局 `AlarmLogContext`，因此同一进程内会影响所有后续告警判断。
 
 多数 Spring Boot 项目只需要在 `application.yml` 中配置异常匹配，Appender 中保留最小配置即可。
 
@@ -162,8 +176,10 @@ spring:
 
 ```xml
 <appender name="AlarmLog" class="io.github.future0923.alarm.log.core.enhance.logback.AlarmLogLogbackAsyncAppender">
-    <doWarnException>java.lang.Exception,java.lang.RuntimeException</doWarnException>
-    <warnExceptionExtend>true</warnExceptionExtend>
+    <includeException>java.lang.Exception,java.lang.RuntimeException</includeException>
+    <includeExceptionExtend>true</includeExceptionExtend>
+    <excludeException>java.io.FileNotFoundException</excludeException>
+    <excludeExceptionExtend>false</excludeExceptionExtend>
     <includeCallerData>true</includeCallerData>
     <appender-ref ref="Console"/>
 </appender>
@@ -173,8 +189,10 @@ spring:
 
 ```xml
 <appender name="AlarmLog" class="io.github.future0923.alarm.log.core.enhance.log4j.AlarmLogLog4jAsyncAppender">
-    <param name="doWarnException" value="java.lang.Exception,java.lang.RuntimeException"/>
-    <param name="warnExceptionExtend" value="true"/>
+    <param name="includeException" value="java.lang.Exception,java.lang.RuntimeException"/>
+    <param name="includeExceptionExtend" value="true"/>
+    <param name="excludeException" value="java.io.FileNotFoundException"/>
+    <param name="excludeExceptionExtend" value="false"/>
     <appender-ref ref="Console"/>
 </appender>
 ```
@@ -185,8 +203,10 @@ Log4j2 的标签名必须是 `AlarmLog`。
 
 ```xml
 <AlarmLog name="AlarmLog"
-          doWarnException="java.lang.Exception,java.lang.RuntimeException"
-          warnExceptionExtend="true"/>
+          includeException="java.lang.Exception,java.lang.RuntimeException"
+          includeExceptionExtend="true"
+          excludeException="java.io.FileNotFoundException"
+          excludeExceptionExtend="false"/>
 ```
 
 为了避免告警 Appender 自身日志造成递归调用，建议只把 `AlarmLog` 挂在 `ERROR` 级别：
@@ -216,7 +236,7 @@ Spring Boot starter 已包含 `alarm-log-aspect`。Spring MVC 或手动集成时
 
 ```java
 @RestController
-@Alarm(doWarnException = Exception.class, warnExceptionExtend = true)
+@Alarm(includeException = Exception.class, includeExceptionExtend = true)
 public class TestController {
 
     @GetMapping("/test1")
@@ -225,9 +245,20 @@ public class TestController {
     }
 
     @GetMapping("/test2")
-    @Alarm(doWarnException = TestAspectException.class, warnExceptionExtend = false)
+    @Alarm(includeException = TestAspectException.class, includeExceptionExtend = false)
     public void test2() throws TestAspectException {
         throw new TestAspectException();
+    }
+
+    @GetMapping("/test3")
+    @Alarm(
+        includeException = Exception.class,
+        includeExceptionExtend = true,
+        excludeException = IllegalArgumentException.class,
+        excludeExceptionExtend = true
+    )
+    public void test3() {
+        throw new NumberFormatException("ignored");
     }
 }
 ```
@@ -236,6 +267,7 @@ public class TestController {
 
 - `test1` 会触发告警，因为 `IllegalStateException` 是 `Exception` 的子类。
 - `test2` 只在抛出 `TestAspectException` 本身时触发告警。
+- `test3` 不会触发告警，因为 `NumberFormatException` 是 `IllegalArgumentException` 的子类，命中了排除规则。
 - `@Alarm` 捕获异常后仍会重新抛出原始异常，不会改变业务异常传播。
 
 ## Spring MVC 接入
@@ -259,10 +291,16 @@ Spring MVC 项目至少需要引入核心模块和需要的通知模块。
 
 ```xml
 <bean id="alarmLogConfigContext" class="io.github.future0923.alarm.log.common.context.AlarmLogContext">
-    <property name="warnExceptionExtend" value="true"/>
-    <property name="doWarnExceptionList">
+    <property name="includeExceptionExtend" value="true"/>
+    <property name="includeExceptionList">
         <list>
             <value>java.lang.Exception</value>
+        </list>
+    </property>
+    <property name="excludeExceptionExtend" value="false"/>
+    <property name="excludeExceptionList">
+        <list>
+            <value>java.io.FileNotFoundException</value>
         </list>
     </property>
     <property name="maxRetryTimes" value="3"/>

@@ -2,7 +2,6 @@ package io.github.future0923.alarm.log.core.enhance.log4j2;
 
 import io.github.future0923.alarm.log.common.context.AlarmLogContext;
 import io.github.future0923.alarm.log.common.context.AlarmInfoContext;
-import io.github.future0923.alarm.log.common.utils.ExceptionUtils;
 import io.github.future0923.alarm.log.warn.common.dispatcher.AlarmLogDispatcher;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Core;
@@ -37,8 +36,7 @@ public class AlarmLog4j2AsyncAppender extends AbstractAppender {
     @Override
     public void append(LogEvent logEvent) {
         Throwable throwable = logEvent.getThrown();
-        if (Objects.nonNull(throwable)
-                && (AlarmLogContext.doWarnException(throwable) || ExceptionUtils.doWarnExceptionInstance(throwable))) {
+        if (Objects.nonNull(throwable) && AlarmLogContext.shouldWarnException(throwable)) {
             StackTraceElement stackTraceElement = getFirstStackTraceElement(throwable);
             AlarmLogDispatcher.dispatch(
                     AlarmInfoContext.builder()
@@ -68,16 +66,20 @@ public class AlarmLog4j2AsyncAppender extends AbstractAppender {
                                                           @PluginElement("Filter") final Filter filter,
                                                           @PluginElement("Layout") Layout<? extends Serializable> layout,
                                                           @PluginAttribute ("ignoreExceptions" ) final boolean ignore,
-                                                          @PluginAttribute("warnExceptionExtend") Boolean warnExceptionExtend,
-                                                          @PluginAttribute("doWarnException") String doWarnException) {
+                                                          @PluginAttribute("includeException") String includeException,
+                                                          @PluginAttribute("includeExceptionExtend") Boolean includeExceptionExtend,
+                                                          @PluginAttribute("excludeException") String excludeException,
+                                                          @PluginAttribute("excludeExceptionExtend") Boolean excludeExceptionExtend) {
         if (name == null) {
             name = "AlarmLog";
         }
         if (layout == null) {
             layout = PatternLayout.createDefaultLayout();
         }
-        Optional.ofNullable(doWarnException).ifPresent(className -> AlarmLogContext.addDoWarnExceptionList(Arrays.asList(className.split(","))));
-        Optional.ofNullable(warnExceptionExtend).ifPresent(AlarmLogContext::setWarnExceptionExtend);
+        Optional.ofNullable(includeException).ifPresent(className -> AlarmLogContext.addIncludeExceptionList(Arrays.asList(className.split(","))));
+        Optional.ofNullable(includeExceptionExtend).ifPresent(AlarmLogContext::setIncludeExceptionExtend);
+        Optional.ofNullable(excludeException).ifPresent(className -> AlarmLogContext.addExcludeExceptionList(Arrays.asList(className.split(","))));
+        Optional.ofNullable(excludeExceptionExtend).ifPresent(AlarmLogContext::setExcludeExceptionExtend);
         return new AlarmLog4j2AsyncAppender(name, filter, layout, ignore, Property.EMPTY_ARRAY);
     }
 }

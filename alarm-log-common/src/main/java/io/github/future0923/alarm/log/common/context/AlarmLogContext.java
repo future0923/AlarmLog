@@ -34,11 +34,17 @@ public class AlarmLogContext {
     @Setter
     private static Boolean simpleWarnInfo = false;
 
-    private static Boolean warnExceptionExtend = false;
+    private static Boolean includeExceptionExtend = false;
 
-    private static List<String> doWarnExceptionList = new ArrayList<>();
+    private static Boolean excludeExceptionExtend = false;
 
-    private static List<Class<? extends Throwable>> doExtendWarnExceptionList = new ArrayList<>();
+    private static List<String> includeExceptionList = new ArrayList<>();
+
+    private static List<String> excludeExceptionList = new ArrayList<>();
+
+    private static List<Class<? extends Throwable>> includeExtendExceptionList = new ArrayList<>();
+
+    private static List<Class<? extends Throwable>> excludeExtendExceptionList = new ArrayList<>();
 
     @Getter
     @Setter
@@ -53,58 +59,81 @@ public class AlarmLogContext {
         return simpleConfig;
     }
 
-    public static Boolean getWarnExceptionExtend() {
-        return warnExceptionExtend;
+    public static Boolean getIncludeExceptionExtend() {
+        return includeExceptionExtend;
     }
 
-    public static void setWarnExceptionExtend(Boolean warnExceptionExtend) {
-        AlarmLogContext.warnExceptionExtend = warnExceptionExtend;
-        if (warnExceptionExtend && !AlarmLogContext.doWarnExceptionList.isEmpty()) {
-            genExtendWarnExceptionList();
+    public static void setIncludeExceptionExtend(Boolean includeExceptionExtend) {
+        AlarmLogContext.includeExceptionExtend = includeExceptionExtend;
+        AlarmLogContext.includeExtendExceptionList = Boolean.TRUE.equals(includeExceptionExtend) ? genExtendExceptionList(AlarmLogContext.includeExceptionList) : new ArrayList<>();
+    }
+
+    public static Boolean getExcludeExceptionExtend() {
+        return excludeExceptionExtend;
+    }
+
+    public static void setExcludeExceptionExtend(Boolean excludeExceptionExtend) {
+        AlarmLogContext.excludeExceptionExtend = excludeExceptionExtend;
+        AlarmLogContext.excludeExtendExceptionList = Boolean.TRUE.equals(excludeExceptionExtend) ? genExtendExceptionList(AlarmLogContext.excludeExceptionList) : new ArrayList<>();
+    }
+
+    public static List<String> getIncludeExceptionList() {
+        return includeExceptionList;
+    }
+
+    public static void addIncludeExceptionList(List<String> includeExceptionList) {
+        AlarmLogContext.includeExceptionList.addAll(includeExceptionList);
+        if (Boolean.TRUE.equals(AlarmLogContext.includeExceptionExtend)) {
+            AlarmLogContext.includeExtendExceptionList.addAll(genExtendExceptionList(includeExceptionList));
         }
     }
 
-    public static List<String> getDoWarnExceptionList() {
-        return doWarnExceptionList;
+    public static void setIncludeExceptionList(List<String> includeExceptionList) {
+        AlarmLogContext.includeExceptionList = includeExceptionList;
+        AlarmLogContext.includeExtendExceptionList = Boolean.TRUE.equals(AlarmLogContext.includeExceptionExtend) ? genExtendExceptionList(includeExceptionList) : new ArrayList<>();
     }
 
-    public static void addDoWarnExceptionList(List<String> doWarnExceptionList) {
-        AlarmLogContext.doWarnExceptionList.addAll(doWarnExceptionList);
-        if (AlarmLogContext.warnExceptionExtend) {
-            genExtendWarnExceptionList(doWarnExceptionList);
+    public static List<String> getExcludeExceptionList() {
+        return excludeExceptionList;
+    }
+
+    public static void addExcludeExceptionList(List<String> excludeExceptionList) {
+        AlarmLogContext.excludeExceptionList.addAll(excludeExceptionList);
+        if (Boolean.TRUE.equals(AlarmLogContext.excludeExceptionExtend)) {
+            AlarmLogContext.excludeExtendExceptionList.addAll(genExtendExceptionList(excludeExceptionList));
         }
     }
 
-    public static void setDoWarnExceptionList(List<String> doWarnExceptionList) {
-        AlarmLogContext.doWarnExceptionList = doWarnExceptionList;
-        if (AlarmLogContext.warnExceptionExtend) {
-            genExtendWarnExceptionList();
-        }
+    public static void setExcludeExceptionList(List<String> excludeExceptionList) {
+        AlarmLogContext.excludeExceptionList = excludeExceptionList;
+        AlarmLogContext.excludeExtendExceptionList = Boolean.TRUE.equals(AlarmLogContext.excludeExceptionExtend) ? genExtendExceptionList(excludeExceptionList) : new ArrayList<>();
     }
 
-    public static boolean doWarnException(Throwable warnExceptionClass) {
-        return AlarmLogContext.warnExceptionExtend ? ExceptionUtils.doWarnExceptionExtend(warnExceptionClass, AlarmLogContext.doExtendWarnExceptionList) : ExceptionUtils.doWarnExceptionName(warnExceptionClass, AlarmLogContext.doWarnExceptionList);
+    public static boolean shouldWarnException(Throwable exception) {
+        if (matchExcludeException(exception)) {
+            return false;
+        }
+        return matchIncludeException(exception) || ExceptionUtils.matchMarkerException(exception);
+    }
+
+    public static boolean matchIncludeException(Throwable exception) {
+        return Boolean.TRUE.equals(AlarmLogContext.includeExceptionExtend) ? ExceptionUtils.matchExceptionExtend(exception, AlarmLogContext.includeExtendExceptionList) : ExceptionUtils.matchExceptionName(exception, AlarmLogContext.includeExceptionList);
+    }
+
+    public static boolean matchExcludeException(Throwable exception) {
+        return Boolean.TRUE.equals(AlarmLogContext.excludeExceptionExtend) ? ExceptionUtils.matchExceptionExtend(exception, AlarmLogContext.excludeExtendExceptionList) : ExceptionUtils.matchExceptionName(exception, AlarmLogContext.excludeExceptionList);
     }
 
     @SuppressWarnings("unchecked")
-    private static void genExtendWarnExceptionList() {
-        for (String className : AlarmLogContext.doWarnExceptionList) {
+    private static List<Class<? extends Throwable>> genExtendExceptionList(List<String> exceptionList) {
+        List<Class<? extends Throwable>> extendExceptionList = new ArrayList<>();
+        for (String className : exceptionList) {
             try {
-                AlarmLogContext.doExtendWarnExceptionList.add((Class<? extends Throwable>) Class.forName(className));
+                extendExceptionList.add((Class<? extends Throwable>) Class.forName(className));
             } catch (ClassNotFoundException e) {
                 logger.error("init AlarmLogContext classNotFoundException, className [{}]", className);
             }
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void genExtendWarnExceptionList(List<String> doWarnExceptionList) {
-        for (String className : doWarnExceptionList) {
-            try {
-                AlarmLogContext.doExtendWarnExceptionList.add((Class<? extends Throwable>) Class.forName(className));
-            } catch (ClassNotFoundException e) {
-                logger.error("init AlarmLogContext classNotFoundException, className [{}]", className);
-            }
-        }
+        return extendExceptionList;
     }
 }

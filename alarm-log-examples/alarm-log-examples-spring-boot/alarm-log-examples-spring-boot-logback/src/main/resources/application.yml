@@ -21,12 +21,18 @@ spring:
                 enabled: false
                 token: xxx
                 secret: xxx
-        warn-exception-extend: false
+        exception:
+            include:
+                extend: false
+                classes:
+                    - java.lang.Throwable
+            exclude:
+                extend: false
+                classes:
+                    - java.io.FileNotFoundException
         simple-warn-info: false
         print-stack-trace: true
         max-retry-times: 1
         retry-sleep-millis: 3000
-        do-warn-exception:
-            - java.lang.Throwable
 server:
     port: 8193

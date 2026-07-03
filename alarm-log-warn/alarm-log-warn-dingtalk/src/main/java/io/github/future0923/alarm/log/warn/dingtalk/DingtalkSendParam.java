@@ -14,10 +14,22 @@ public class DingtalkSendParam {
 
     private Text text;
 
+    private Markdown markdown;
+
     @Data
     @AllArgsConstructor
     public static class Text {
 
         private String content;
     }
+
+    @Data
+    @AllArgsConstructor
+    public static class Markdown {
+
+        private String title;
+
+        private String text;
+    }
+
 }

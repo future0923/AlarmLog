@@ -19,12 +19,12 @@ class AlarmLogLogbackAsyncAppenderTest {
 
     @Test
     void doAppendIgnoresAlarmContextStackFrameWhenThrowableStackTraceIsEmpty() {
-        List<String> originalDoWarnExceptionList = new ArrayList<>(AlarmLogContext.getDoWarnExceptionList());
-        Boolean originalWarnExceptionExtend = AlarmLogContext.getWarnExceptionExtend();
+        List<String> originalIncludeExceptionList = new ArrayList<>(AlarmLogContext.getIncludeExceptionList());
+        Boolean originalIncludeExceptionExtend = AlarmLogContext.getIncludeExceptionExtend();
 
         try {
-            AlarmLogContext.setWarnExceptionExtend(false);
-            AlarmLogContext.setDoWarnExceptionList(Collections.singletonList(RuntimeException.class.getName()));
+            AlarmLogContext.setIncludeExceptionExtend(false);
+            AlarmLogContext.setIncludeExceptionList(Collections.singletonList(RuntimeException.class.getName()));
 
             RuntimeException throwable = new RuntimeException("empty stack trace");
             throwable.setStackTrace(new StackTraceElement[0]);
@@ -40,8 +40,8 @@ class AlarmLogLogbackAsyncAppenderTest {
 
             assertDoesNotThrow(() -> appender.doAppend(loggingEvent));
         } finally {
-            AlarmLogContext.setDoWarnExceptionList(originalDoWarnExceptionList);
-            AlarmLogContext.setWarnExceptionExtend(originalWarnExceptionExtend);
+            AlarmLogContext.setIncludeExceptionList(originalIncludeExceptionList);
+            AlarmLogContext.setIncludeExceptionExtend(originalIncludeExceptionExtend);
         }
     }
 }

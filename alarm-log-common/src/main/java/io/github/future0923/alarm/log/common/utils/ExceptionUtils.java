@@ -11,19 +11,19 @@ import java.util.List;
  */
 public class ExceptionUtils {
 
-    public static boolean doWarnExceptionInstance(Throwable throwable) {
+    public static boolean matchMarkerException(Throwable throwable) {
         return throwable instanceof AlarmLogDoWarnException
                 || throwable instanceof AlarmLogException
                 || throwable instanceof AlarmLogRuntimeException;
     }
 
-    public static boolean doWarnExceptionName(Throwable warnExceptionClass, List<String> doWarnExceptionList) {
-        return doWarnExceptionList.contains(warnExceptionClass.getClass().getName());
+    public static boolean matchExceptionName(Throwable exception, List<String> exceptionList) {
+        return exceptionList.contains(exception.getClass().getName());
     }
 
-    public static boolean doWarnExceptionExtend(Throwable warnExceptionClass, List<Class<? extends Throwable>> doExtendWarnExceptionList) {
-        for (Class<?> aClass : doExtendWarnExceptionList) {
-            if (aClass.isAssignableFrom(warnExceptionClass.getClass())) {
+    public static boolean matchExceptionExtend(Throwable exception, List<Class<? extends Throwable>> exceptionList) {
+        for (Class<?> aClass : exceptionList) {
+            if (aClass.isAssignableFrom(exception.getClass())) {
                 return true;
             }
         }

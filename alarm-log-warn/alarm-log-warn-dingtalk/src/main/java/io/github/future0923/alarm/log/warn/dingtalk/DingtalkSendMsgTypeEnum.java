@@ -12,6 +12,10 @@ public enum DingtalkSendMsgTypeEnum {
      * text
      */
     TEXT("text"),
+    /**
+     * markdown
+     */
+    MARKDOWN("markdown"),
     ;
 
     private String type;

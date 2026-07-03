@@ -50,13 +50,19 @@
 <!--        <property name="retrySleepMillis" value="3000" />-->
 <!--        <property name="printStackTrace" value="true" />-->
 <!--        <property name="simpleWarnInfo" value="false" />-->
-<!--        <property name="warnExceptionExtend" value="true" />-->
+<!--        <property name="includeExceptionExtend" value="true" />-->
 <!--        <property name="alarmMessageContext" ref="context1"/>-->
 <!--        <property name="alarmMessageContext" ref="context2"/>-->
-<!--        <property name="doWarnExceptionList">-->
+<!--        <property name="includeExceptionList">-->
 <!--            <list>-->
 <!--                <value>java.lang.Exception</value>-->
 <!--                <value>java.lang.RuntimeException</value>-->
+<!--            </list>-->
+<!--        </property>-->
+<!--        <property name="excludeExceptionExtend" value="false" />-->
+<!--        <property name="excludeExceptionList">-->
+<!--            <list>-->
+<!--                <value>java.io.FileNotFoundException</value>-->
 <!--            </list>-->
 <!--        </property>-->
 <!--    </bean>-->

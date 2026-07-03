@@ -34,7 +34,7 @@ public class TestController {
     }
 
     @GetMapping("/test4")
-    @Alarm(doWarnException = TestAspectException.class, warnExceptionExtend = false)
+    @Alarm(includeException = TestAspectException.class, includeExceptionExtend = false)
     public void test4() {
         logger.error("test4", new TestAspectException());
     }

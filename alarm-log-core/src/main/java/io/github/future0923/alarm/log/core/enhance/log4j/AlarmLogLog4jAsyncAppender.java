@@ -2,7 +2,6 @@ package io.github.future0923.alarm.log.core.enhance.log4j;
 
 import io.github.future0923.alarm.log.common.context.AlarmLogContext;
 import io.github.future0923.alarm.log.common.context.AlarmInfoContext;
-import io.github.future0923.alarm.log.common.utils.ExceptionUtils;
 import io.github.future0923.alarm.log.warn.common.dispatcher.AlarmLogDispatcher;
 import org.apache.log4j.AsyncAppender;
 import org.apache.log4j.spi.LoggingEvent;
@@ -18,17 +17,31 @@ import java.util.Optional;
 public class AlarmLogLog4jAsyncAppender extends AsyncAppender {
 
     /**
-     * @param doWarnException parsing xml doWarnException param
+     * @param includeException parsing xml includeException param
      */
-    public void setDoWarnException(String doWarnException) {
-        Optional.ofNullable(doWarnException).ifPresent(className -> AlarmLogContext.addDoWarnExceptionList(Arrays.asList(className.split(","))));
+    public void setIncludeException(String includeException) {
+        Optional.ofNullable(includeException).ifPresent(className -> AlarmLogContext.addIncludeExceptionList(Arrays.asList(className.split(","))));
     }
 
     /**
-     * @param warnExceptionExtend parsing xml warnExceptionExtend param
+     * @param includeExceptionExtend parsing xml includeExceptionExtend param
      */
-    public void setWarnExceptionExtend(String warnExceptionExtend) {
-        Optional.ofNullable(warnExceptionExtend).map(Boolean::new).ifPresent(AlarmLogContext::setWarnExceptionExtend);
+    public void setIncludeExceptionExtend(String includeExceptionExtend) {
+        Optional.ofNullable(includeExceptionExtend).map(Boolean::new).ifPresent(AlarmLogContext::setIncludeExceptionExtend);
+    }
+
+    /**
+     * @param excludeException parsing xml excludeException param
+     */
+    public void setExcludeException(String excludeException) {
+        Optional.ofNullable(excludeException).ifPresent(className -> AlarmLogContext.addExcludeExceptionList(Arrays.asList(className.split(","))));
+    }
+
+    /**
+     * @param excludeExceptionExtend parsing xml excludeExceptionExtend param
+     */
+    public void setExcludeExceptionExtend(String excludeExceptionExtend) {
+        Optional.ofNullable(excludeExceptionExtend).map(Boolean::new).ifPresent(AlarmLogContext::setExcludeExceptionExtend);
     }
 
     @Override
@@ -36,8 +49,7 @@ public class AlarmLogLog4jAsyncAppender extends AsyncAppender {
         ThrowableInformation throwableInformation = event.getThrowableInformation();
         if (Objects.nonNull(throwableInformation)) {
             Throwable throwable = throwableInformation.getThrowable();
-            if (Objects.nonNull(throwable)
-                    && (AlarmLogContext.doWarnException(throwable) || ExceptionUtils.doWarnExceptionInstance(throwable))) {
+            if (Objects.nonNull(throwable) && AlarmLogContext.shouldWarnException(throwable)) {
                 StackTraceElement stackTraceElement = getFirstStackTraceElement(throwable);
                 AlarmLogDispatcher.dispatch(
                     AlarmInfoContext.builder()

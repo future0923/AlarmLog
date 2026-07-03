@@ -14,7 +14,11 @@ import java.lang.annotation.Target;
 @Documented
 public @interface Alarm {
 
-    Class<? extends Throwable>[] doWarnException() default {Throwable.class};
+    Class<? extends Throwable>[] includeException() default {Throwable.class};
 
-    boolean warnExceptionExtend() default false;
+    boolean includeExceptionExtend() default true;
+
+    Class<? extends Throwable>[] excludeException() default {};
+
+    boolean excludeExceptionExtend() default false;
 }

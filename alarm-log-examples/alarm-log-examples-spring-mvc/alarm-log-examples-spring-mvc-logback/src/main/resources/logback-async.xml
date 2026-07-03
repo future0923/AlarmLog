@@ -8,8 +8,10 @@
     </appender>
 
     <appender name="AlarmLog" class="io.github.future0923.alarm.log.core.enhance.logback.AlarmLogLogbackAsyncAppender">
-        <warnExceptionExtend>false</warnExceptionExtend>
-        <doWarnException>java.lang.Exception,java.lang.RuntimeException</doWarnException>
+        <includeExceptionExtend>false</includeExceptionExtend>
+        <includeException>java.lang.Exception,java.lang.RuntimeException</includeException>
+        <excludeExceptionExtend>false</excludeExceptionExtend>
+        <excludeException>java.io.FileNotFoundException</excludeException>
         <appender-ref ref="Console"/>
     </appender>
 

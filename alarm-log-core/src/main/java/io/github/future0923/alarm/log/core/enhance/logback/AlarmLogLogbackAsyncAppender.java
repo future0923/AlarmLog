@@ -6,7 +6,6 @@ import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.classic.spi.ThrowableProxy;
 import io.github.future0923.alarm.log.common.context.AlarmLogContext;
 import io.github.future0923.alarm.log.common.context.AlarmInfoContext;
-import io.github.future0923.alarm.log.common.utils.ExceptionUtils;
 import io.github.future0923.alarm.log.warn.common.dispatcher.AlarmLogDispatcher;
 
 import java.util.Arrays;
@@ -19,17 +18,31 @@ import java.util.Optional;
 public class AlarmLogLogbackAsyncAppender extends AsyncAppender {
 
     /**
-     * @param doWarnException parsing xml doWarnException param
+     * @param includeException parsing xml includeException param
      */
-    public void setDoWarnException(String doWarnException) {
-        Optional.ofNullable(doWarnException).ifPresent(className -> AlarmLogContext.addDoWarnExceptionList(Arrays.asList(className.split(","))));
+    public void setIncludeException(String includeException) {
+        Optional.ofNullable(includeException).ifPresent(className -> AlarmLogContext.addIncludeExceptionList(Arrays.asList(className.split(","))));
     }
 
     /**
-     * @param warnExceptionExtend parsing xml warnExceptionExtend param
+     * @param includeExceptionExtend parsing xml includeExceptionExtend param
      */
-    public void setWarnExceptionExtend(Boolean warnExceptionExtend) {
-        Optional.ofNullable(warnExceptionExtend).ifPresent(AlarmLogContext::setWarnExceptionExtend);
+    public void setIncludeExceptionExtend(Boolean includeExceptionExtend) {
+        Optional.ofNullable(includeExceptionExtend).ifPresent(AlarmLogContext::setIncludeExceptionExtend);
+    }
+
+    /**
+     * @param excludeException parsing xml excludeException param
+     */
+    public void setExcludeException(String excludeException) {
+        Optional.ofNullable(excludeException).ifPresent(className -> AlarmLogContext.addExcludeExceptionList(Arrays.asList(className.split(","))));
+    }
+
+    /**
+     * @param excludeExceptionExtend parsing xml excludeExceptionExtend param
+     */
+    public void setExcludeExceptionExtend(Boolean excludeExceptionExtend) {
+        Optional.ofNullable(excludeExceptionExtend).ifPresent(AlarmLogContext::setExcludeExceptionExtend);
     }
 
     @Override
@@ -39,8 +52,7 @@ public class AlarmLogLogbackAsyncAppender extends AsyncAppender {
             ThrowableProxy throwableProxy = (ThrowableProxy) loggingEvent.getThrowableProxy();
             if (Objects.nonNull(throwableProxy)) {
                 Throwable throwable = throwableProxy.getThrowable();
-                if (AlarmLogContext.doWarnException(throwable)
-                        || ExceptionUtils.doWarnExceptionInstance(throwable)) {
+                if (AlarmLogContext.shouldWarnException(throwable)) {
                     StackTraceElement stackTraceElement = getFirstStackTraceElement(throwable);
                     AlarmLogDispatcher.dispatch(
                             AlarmInfoContext.builder()

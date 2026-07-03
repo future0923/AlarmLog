@@ -87,8 +87,10 @@ public class AlarmLogAutoConfiguration {
 
         @Autowired
         void setAlarmLogConfig(AlarmLogConfig alarmLogConfig) {
-            Optional.ofNullable(alarmLogConfig.getDoWarnException()).ifPresent(AlarmLogContext::addDoWarnExceptionList);
-            Optional.ofNullable(alarmLogConfig.getWarnExceptionExtend()).ifPresent(AlarmLogContext::setWarnExceptionExtend);
+            Optional.ofNullable(alarmLogConfig.getException()).map(AlarmLogConfig.ExceptionConfig::getInclude).map(AlarmLogConfig.ExceptionMatcherConfig::getClasses).ifPresent(AlarmLogContext::setIncludeExceptionList);
+            Optional.ofNullable(alarmLogConfig.getException()).map(AlarmLogConfig.ExceptionConfig::getInclude).map(AlarmLogConfig.ExceptionMatcherConfig::getExtend).ifPresent(AlarmLogContext::setIncludeExceptionExtend);
+            Optional.ofNullable(alarmLogConfig.getException()).map(AlarmLogConfig.ExceptionConfig::getExclude).map(AlarmLogConfig.ExceptionMatcherConfig::getClasses).ifPresent(AlarmLogContext::setExcludeExceptionList);
+            Optional.ofNullable(alarmLogConfig.getException()).map(AlarmLogConfig.ExceptionConfig::getExclude).map(AlarmLogConfig.ExceptionMatcherConfig::getExtend).ifPresent(AlarmLogContext::setExcludeExceptionExtend);
             Optional.ofNullable(alarmLogConfig.getPrintStackTrace()).ifPresent(AlarmLogContext::setPrintStackTrace);
             Optional.ofNullable(alarmLogConfig.getSimpleWarnInfo()).ifPresent(AlarmLogContext::setSimpleWarnInfo);
             Optional.ofNullable(alarmLogConfig.getMaxRetryTimes()).ifPresent(AlarmLogContext::setMaxRetryTimes);

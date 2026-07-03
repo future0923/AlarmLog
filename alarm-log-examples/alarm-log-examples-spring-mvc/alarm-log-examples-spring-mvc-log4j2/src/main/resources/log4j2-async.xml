@@ -8,8 +8,10 @@
         </Console>
 
         <AlarmLog name="AlarmLog">
-            <warnExceptionExtend>false</warnExceptionExtend>
-            <doWarnException>java.lang.Exception,java.lang.RuntimeException</doWarnException>
+            <includeExceptionExtend>false</includeExceptionExtend>
+            <includeException>java.lang.Exception,java.lang.RuntimeException</includeException>
+            <excludeExceptionExtend>false</excludeExceptionExtend>
+            <excludeException>java.io.FileNotFoundException</excludeException>
         </AlarmLog>
 
         <!--异步输出到控制台-->

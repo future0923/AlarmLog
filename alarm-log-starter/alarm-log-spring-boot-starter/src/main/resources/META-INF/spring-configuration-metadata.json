@@ -1,9 +1,29 @@
 {
   "properties": [
     {
-      "name": "spring.alarm-log.do-warn-exception",
+      "name": "spring.alarm-log.exception.include.classes",
       "type": "java.util.List<java.lang.String>",
-      "description": "do warn exception list.",
+      "description": "Exception class names that should trigger alarm messages.",
+      "sourceType": "io.github.future0923.alarm.log.autoconfigure.AlarmLogConfig"
+    },
+    {
+      "name": "spring.alarm-log.exception.include.extend",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Whether include exception classes match subclasses.",
+      "sourceType": "io.github.future0923.alarm.log.autoconfigure.AlarmLogConfig"
+    },
+    {
+      "name": "spring.alarm-log.exception.exclude.classes",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Exception class names that should be excluded from alarm messages.",
+      "sourceType": "io.github.future0923.alarm.log.autoconfigure.AlarmLogConfig"
+    },
+    {
+      "name": "spring.alarm-log.exception.exclude.extend",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Whether exclude exception classes match subclasses.",
       "sourceType": "io.github.future0923.alarm.log.autoconfigure.AlarmLogConfig"
     },
     {
@@ -32,13 +52,6 @@
       "type": "java.lang.Boolean",
       "defaultValue": false,
       "description": "enabled simple warn message info.",
-      "sourceType": "io.github.future0923.alarm.log.autoconfigure.AlarmLogConfig"
-    },
-    {
-      "name": "spring.alarm-log.warn-exception-extend",
-      "type": "java.lang.Boolean",
-      "defaultValue": false,
-      "description": "extend do warn exception.",
       "sourceType": "io.github.future0923.alarm.log.autoconfigure.AlarmLogConfig"
     },
     {
