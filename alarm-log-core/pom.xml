@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>alarm-log-core</artifactId>
+    <name>alarm-log-core</name>
 
 
     <dependencies>

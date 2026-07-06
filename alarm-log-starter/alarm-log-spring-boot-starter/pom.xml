@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>alarm-log-spring-boot-starter</artifactId>
+    <name>alarm-log-spring-boot-starter</name>
 
     <dependencies>
         <dependency>

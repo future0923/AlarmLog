@@ -11,6 +11,7 @@
 
     <artifactId>alarm-log-warn</artifactId>
     <packaging>pom</packaging>
+    <name>alarm-log-warn</name>
     <modules>
         <module>alarm-log-warn-mail</module>
         <module>alarm-log-warn-workweixin</module>

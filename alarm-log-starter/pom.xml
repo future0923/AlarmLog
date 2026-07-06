@@ -11,6 +11,7 @@
 
     <artifactId>alarm-log-starter</artifactId>
     <packaging>pom</packaging>
+    <name>alarm-log-starter</name>
     <modules>
         <module>alarm-log-spring-boot-starter</module>
     </modules>

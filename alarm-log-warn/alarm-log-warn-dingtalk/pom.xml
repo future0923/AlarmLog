@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>alarm-log-warn-dingtalk</artifactId>
+    <name>alarm-log-warn-dingtalk</name>
 
     <dependencies>
         <dependency>

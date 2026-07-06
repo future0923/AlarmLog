@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>alarm-log-common</artifactId>
+    <name>alarm-log-common</name>
 
     <dependencies>
         <dependency>
