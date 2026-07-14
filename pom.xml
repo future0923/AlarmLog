@@ -7,7 +7,7 @@
     <groupId>io.github.future0923</groupId>
     <artifactId>alarm-log</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 
     <name>alarm-log</name>
     <description>a lightweight log exception alert framework</description>
