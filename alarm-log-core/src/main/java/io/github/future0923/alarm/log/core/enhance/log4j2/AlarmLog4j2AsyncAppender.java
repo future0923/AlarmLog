@@ -70,6 +70,18 @@ public class AlarmLog4j2AsyncAppender extends AbstractAppender {
         return new StackTraceElement(throwable.getClass().getName(), "unknown", null, -1);
     }
 
+    public static AlarmLog4j2AsyncAppender createAppender(String name,
+                                                          Filter filter,
+                                                          Layout<? extends Serializable> layout,
+                                                          boolean ignore,
+                                                          String includeException,
+                                                          Boolean includeExceptionExtend,
+                                                          String excludeException,
+                                                          Boolean excludeExceptionExtend) {
+        return createAppender(name, filter, layout, ignore, includeException, includeExceptionExtend,
+                excludeException, excludeExceptionExtend, null);
+    }
+
     @PluginFactory
     public static AlarmLog4j2AsyncAppender createAppender(@PluginAttribute("name") String name,
                                                           @PluginElement("Filter") final Filter filter,

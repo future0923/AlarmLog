@@ -8,12 +8,15 @@ import io.github.future0923.alarm.log.warn.common.factory.AlarmLogWarnServiceFac
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.impl.Log4jLogEvent;
+import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.message.SimpleMessage;
 import org.apache.logging.log4j.util.SortedArrayStringMap;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -26,6 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AlarmLog4j2AsyncAppenderTest {
@@ -71,6 +75,22 @@ class AlarmLog4j2AsyncAppenderTest {
         AlarmLogContext.setIncludeExceptionList(originalIncludeExceptionList);
         AlarmLogContext.setIncludeExceptionExtend(originalIncludeExceptionExtend);
         AlarmLogContext.setIncludeContextKeys(originalIncludeContextKeys);
+    }
+
+    @Test
+    void createAppenderRetainsLegacyEightArgumentFactorySignature() throws Exception {
+        AlarmLog4j2AsyncAppender appender = AlarmLog4j2AsyncAppender.createAppender(
+                "AlarmLog", null, null, true, null, null, null, null);
+
+        Method factory = AlarmLog4j2AsyncAppender.class.getDeclaredMethod(
+                "createAppender", String.class, org.apache.logging.log4j.core.Filter.class,
+                org.apache.logging.log4j.core.Layout.class, boolean.class, String.class, Boolean.class,
+                String.class, Boolean.class);
+
+        assertNotNull(appender);
+        assertTrue(Modifier.isPublic(factory.getModifiers()));
+        assertTrue(Modifier.isStatic(factory.getModifiers()));
+        assertFalse(factory.isAnnotationPresent(PluginFactory.class));
     }
 
     @Test
