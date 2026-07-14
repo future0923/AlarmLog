@@ -27,6 +27,13 @@
       "sourceType": "io.github.future0923.alarm.log.autoconfigure.AlarmLogConfig"
     },
     {
+      "name": "spring.alarm-log.include-context-keys",
+      "type": "java.util.List<java.lang.String>",
+      "defaultValue": [],
+      "description": "Logging context keys included in alarm messages.",
+      "sourceType": "io.github.future0923.alarm.log.autoconfigure.AlarmLogConfig"
+    },
+    {
       "name": "spring.alarm-log.max-retry-times",
       "type": "java.lang.Integer",
       "defaultValue": 3,

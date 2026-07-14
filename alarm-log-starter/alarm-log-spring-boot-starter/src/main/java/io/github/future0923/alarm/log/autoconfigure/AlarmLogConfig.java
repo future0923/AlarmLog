@@ -3,6 +3,7 @@ package io.github.future0923.alarm.log.autoconfigure;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -19,6 +20,8 @@ public class AlarmLogConfig {
     private Boolean printStackTrace = false;
 
     private Boolean simpleWarnInfo = false;
+
+    private List<String> includeContextKeys = Collections.emptyList();
 
     private ExceptionConfig exception = new ExceptionConfig();
 

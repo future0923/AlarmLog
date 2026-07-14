@@ -95,6 +95,7 @@ public class AlarmLogAutoConfiguration {
             Optional.ofNullable(alarmLogConfig.getSimpleWarnInfo()).ifPresent(AlarmLogContext::setSimpleWarnInfo);
             Optional.ofNullable(alarmLogConfig.getMaxRetryTimes()).ifPresent(AlarmLogContext::setMaxRetryTimes);
             Optional.ofNullable(alarmLogConfig.getRetrySleepMillis()).ifPresent(AlarmLogContext::setRetrySleepMillis);
+            Optional.ofNullable(alarmLogConfig.getIncludeContextKeys()).ifPresent(AlarmLogContext::setIncludeContextKeys);
         }
 
         @Autowired

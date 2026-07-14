@@ -115,10 +115,23 @@ public class BizException extends AlarmLogRuntimeException {
 | `spring.alarm-log.exception.include.extend` | `Boolean` | `false` | 包含规则是否按继承关系匹配异常 |
 | `spring.alarm-log.exception.exclude.classes` | `List<String>` | 空 | 需要排除告警的异常类全限定名 |
 | `spring.alarm-log.exception.exclude.extend` | `Boolean` | `false` | 排除规则是否按继承关系匹配异常 |
+| `spring.alarm-log.include-context-keys` | `List<String>` | 空 | 需要随告警传递的日志上下文键 |
 | `spring.alarm-log.max-retry-times` | `Integer` | `3` | 告警发送失败后的最大重试次数 |
 | `spring.alarm-log.retry-sleep-millis` | `Integer` | `1000` | 重试等待基准时间，实际等待会按次数递增 |
 | `spring.alarm-log.print-stack-trace` | `Boolean` | `false` | 告警内容是否包含堆栈 |
 | `spring.alarm-log.simple-warn-info` | `Boolean` | `false` | 是否使用简化告警内容 |
+
+### 日志上下文白名单
+
+`include-context-keys` 配置进程级的统一上下文白名单，同一进程多次初始化时以最后一次配置为准。使用 TLog 时可以按需配置其写入日志上下文的键：
+
+```yaml
+spring:
+  alarm-log:
+    include-context-keys: traceId,spanId,event,requestMethod,requestUri,handlerMethod
+```
+
+AlarmLog 不依赖 TLog；上面仅为 TLog 的配置示例，应用或其他链路追踪组件写入日志上下文的键也可以加入白名单。
 
 ### 钉钉群机器人
 
