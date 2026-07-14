@@ -4,6 +4,7 @@ import ch.qos.logback.classic.AsyncAppender;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.classic.spi.ThrowableProxy;
+import io.github.future0923.alarm.log.common.context.AlarmContextSnapshot;
 import io.github.future0923.alarm.log.common.context.AlarmLogContext;
 import io.github.future0923.alarm.log.common.context.AlarmInfoContext;
 import io.github.future0923.alarm.log.warn.common.dispatcher.AlarmLogDispatcher;
@@ -16,6 +17,13 @@ import java.util.Optional;
  * @author weilai
  */
 public class AlarmLogLogbackAsyncAppender extends AsyncAppender {
+
+    /**
+     * @param includeContextKeys parsing xml includeContextKeys param
+     */
+    public void setIncludeContextKeys(String includeContextKeys) {
+        AlarmLogContext.setIncludeContextKeys(includeContextKeys);
+    }
 
     /**
      * @param includeException parsing xml includeException param
@@ -64,7 +72,8 @@ public class AlarmLogLogbackAsyncAppender extends AsyncAppender {
                                     .className(stackTraceElement.getClassName())
                                     .fileName(stackTraceElement.getFileName())
                                     .methodName(stackTraceElement.getMethodName())
-                                    .lineNumber(stackTraceElement.getLineNumber()).build()
+                                    .lineNumber(stackTraceElement.getLineNumber())
+                                    .contextData(AlarmContextSnapshot.capture(loggingEvent.getMDCPropertyMap())).build()
                             , throwable);
                 }
             }

@@ -1,5 +1,6 @@
 package io.github.future0923.alarm.log.core.enhance.log4j;
 
+import io.github.future0923.alarm.log.common.context.AlarmContextSnapshot;
 import io.github.future0923.alarm.log.common.context.AlarmLogContext;
 import io.github.future0923.alarm.log.common.context.AlarmInfoContext;
 import io.github.future0923.alarm.log.warn.common.dispatcher.AlarmLogDispatcher;
@@ -15,6 +16,13 @@ import java.util.Optional;
  * @author weilai
  */
 public class AlarmLogLog4jAsyncAppender extends AsyncAppender {
+
+    /**
+     * @param includeContextKeys parsing xml includeContextKeys param
+     */
+    public void setIncludeContextKeys(String includeContextKeys) {
+        AlarmLogContext.setIncludeContextKeys(includeContextKeys);
+    }
 
     /**
      * @param includeException parsing xml includeException param
@@ -61,7 +69,8 @@ public class AlarmLogLog4jAsyncAppender extends AsyncAppender {
                         .className(stackTraceElement.getClassName())
                         .fileName(stackTraceElement.getFileName())
                         .lineNumber(stackTraceElement.getLineNumber())
-                        .methodName(stackTraceElement.getMethodName()).build()
+                        .methodName(stackTraceElement.getMethodName())
+                        .contextData(AlarmContextSnapshot.capture(event.getProperties())).build()
                     , throwable);
             }
         }

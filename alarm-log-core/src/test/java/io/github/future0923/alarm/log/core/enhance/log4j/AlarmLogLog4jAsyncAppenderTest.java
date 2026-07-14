@@ -1,22 +1,20 @@
-package io.github.future0923.alarm.log.core.enhance.logback;
+package io.github.future0923.alarm.log.core.enhance.log4j;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.spi.LoggingEvent;
-import ch.qos.logback.classic.spi.ThrowableProxy;
 import io.github.future0923.alarm.log.common.context.AlarmInfoContext;
 import io.github.future0923.alarm.log.common.context.AlarmLogContext;
 import io.github.future0923.alarm.log.warn.common.AlarmLogWarnService;
 import io.github.future0923.alarm.log.warn.common.dispatcher.AlarmLogDispatcher;
 import io.github.future0923.alarm.log.warn.common.factory.AlarmLogWarnServiceFactory;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggingEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -24,15 +22,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * @author weilai
- */
-class AlarmLogLogbackAsyncAppenderTest {
+class AlarmLogLog4jAsyncAppenderTest {
 
     private List<String> originalIncludeExceptionList;
     private Boolean originalIncludeExceptionExtend;
@@ -40,6 +34,7 @@ class AlarmLogLogbackAsyncAppenderTest {
     private List<AlarmLogWarnService> originalWarnServices;
     private ExecutorService executorService;
     private CountDownLatch releaseWorker;
+    private AlarmLogLog4jAsyncAppender appender;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -68,6 +63,9 @@ class AlarmLogLogbackAsyncAppenderTest {
     @AfterEach
     void tearDown() throws Exception {
         releaseWorker.countDown();
+        if (appender != null) {
+            appender.close();
+        }
         executorService.shutdownNow();
         executorService.awaitTermination(3, TimeUnit.SECONDS);
         AlarmLogDispatcher.reset();
@@ -78,7 +76,7 @@ class AlarmLogLogbackAsyncAppenderTest {
     }
 
     @Test
-    void doAppendSnapshotsWhitelistedMdcBeforeAsyncDispatch() throws Exception {
+    void doAppendSnapshotsWhitelistedPropertiesBeforeAsyncDispatch() throws Exception {
         CountDownLatch capturedLatch = new CountDownLatch(1);
         AtomicReference<AlarmInfoContext> captured = new AtomicReference<>();
         AlarmLogWarnServiceFactory.setAlarmLogWarnServices(Collections.singletonList((context, throwable) -> {
@@ -87,42 +85,22 @@ class AlarmLogLogbackAsyncAppenderTest {
             return true;
         }));
 
-        AlarmLogLogbackAsyncAppender appender = new AlarmLogLogbackAsyncAppender();
+        appender = new AlarmLogLog4jAsyncAppender();
         appender.setIncludeContextKeys("traceId,spanId");
-        Map<String, String> mdc = new HashMap<>();
-        mdc.put("traceId", "trace-logback");
-        mdc.put("spanId", "span-logback");
-        mdc.put("Authorization", "secret");
-        LoggingEvent loggingEvent = loggingEvent(new RuntimeException("boom"));
-        loggingEvent.setMDCPropertyMap(mdc);
-
-        appender.doAppend(loggingEvent);
-        mdc.clear();
+        LoggingEvent event = new LoggingEvent(
+                getClass().getName(), Logger.getLogger("test"), Level.ERROR, "boom", new RuntimeException("boom"));
+        event.setProperty("traceId", "trace-log4j");
+        event.setProperty("spanId", "span-log4j");
+        event.setProperty("Authorization", "secret");
+        appender.doAppend(event);
+        event.setProperty("traceId", "changed");
+        event.removeProperty("spanId");
+        event.removeProperty("Authorization");
         releaseWorker.countDown();
 
         assertTrue(capturedLatch.await(3, TimeUnit.SECONDS));
-        assertEquals("trace-logback", captured.get().getContextData().get("traceId"));
-        assertEquals("span-logback", captured.get().getContextData().get("spanId"));
+        assertEquals("trace-log4j", captured.get().getContextData().get("traceId"));
+        assertEquals("span-log4j", captured.get().getContextData().get("spanId"));
         assertFalse(captured.get().getContextData().containsKey("Authorization"));
-    }
-
-    @Test
-    void doAppendIgnoresAlarmContextStackFrameWhenThrowableStackTraceIsEmpty() {
-        RuntimeException throwable = new RuntimeException("empty stack trace");
-        throwable.setStackTrace(new StackTraceElement[0]);
-
-        AlarmLogLogbackAsyncAppender appender = new AlarmLogLogbackAsyncAppender();
-
-        assertDoesNotThrow(() -> appender.doAppend(loggingEvent(throwable)));
-    }
-
-    private LoggingEvent loggingEvent(RuntimeException throwable) {
-        LoggingEvent loggingEvent = new LoggingEvent();
-        loggingEvent.setMessage(throwable.getMessage());
-        loggingEvent.setLevel(Level.ERROR);
-        loggingEvent.setLoggerName("test");
-        loggingEvent.setThreadName("test-thread");
-        loggingEvent.setThrowableProxy(new ThrowableProxy(throwable));
-        return loggingEvent;
     }
 }

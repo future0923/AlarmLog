@@ -1,5 +1,6 @@
 package io.github.future0923.alarm.log.core.enhance.log4j2;
 
+import io.github.future0923.alarm.log.common.context.AlarmContextSnapshot;
 import io.github.future0923.alarm.log.common.context.AlarmLogContext;
 import io.github.future0923.alarm.log.common.context.AlarmInfoContext;
 import io.github.future0923.alarm.log.warn.common.dispatcher.AlarmLogDispatcher;
@@ -33,6 +34,13 @@ public class AlarmLog4j2AsyncAppender extends AbstractAppender {
         super(name, filter, layout, ignoreExceptions, properties);
     }
 
+    /**
+     * @param includeContextKeys parsing xml includeContextKeys param
+     */
+    public void setIncludeContextKeys(String includeContextKeys) {
+        AlarmLogContext.setIncludeContextKeys(includeContextKeys);
+    }
+
     @Override
     public void append(LogEvent logEvent) {
         Throwable throwable = logEvent.getThrown();
@@ -48,7 +56,8 @@ public class AlarmLog4j2AsyncAppender extends AbstractAppender {
                             .className(stackTraceElement.getClassName())
                             .fileName(stackTraceElement.getFileName())
                             .methodName(stackTraceElement.getMethodName())
-                            .lineNumber(stackTraceElement.getLineNumber()).build()
+                            .lineNumber(stackTraceElement.getLineNumber())
+                            .contextData(AlarmContextSnapshot.capture(logEvent.getContextData().toMap())).build()
                     , throwable);
         }
     }
@@ -69,7 +78,8 @@ public class AlarmLog4j2AsyncAppender extends AbstractAppender {
                                                           @PluginAttribute("includeException") String includeException,
                                                           @PluginAttribute("includeExceptionExtend") Boolean includeExceptionExtend,
                                                           @PluginAttribute("excludeException") String excludeException,
-                                                          @PluginAttribute("excludeExceptionExtend") Boolean excludeExceptionExtend) {
+                                                          @PluginAttribute("excludeExceptionExtend") Boolean excludeExceptionExtend,
+                                                          @PluginAttribute("includeContextKeys") String includeContextKeys) {
         if (name == null) {
             name = "AlarmLog";
         }
@@ -80,6 +90,8 @@ public class AlarmLog4j2AsyncAppender extends AbstractAppender {
         Optional.ofNullable(includeExceptionExtend).ifPresent(AlarmLogContext::setIncludeExceptionExtend);
         Optional.ofNullable(excludeException).ifPresent(className -> AlarmLogContext.addExcludeExceptionList(Arrays.asList(className.split(","))));
         Optional.ofNullable(excludeExceptionExtend).ifPresent(AlarmLogContext::setExcludeExceptionExtend);
-        return new AlarmLog4j2AsyncAppender(name, filter, layout, ignore, Property.EMPTY_ARRAY);
+        AlarmLog4j2AsyncAppender appender = new AlarmLog4j2AsyncAppender(name, filter, layout, ignore, Property.EMPTY_ARRAY);
+        appender.setIncludeContextKeys(includeContextKeys);
+        return appender;
     }
 }
