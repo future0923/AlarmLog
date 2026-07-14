@@ -8,8 +8,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * @author weilai
@@ -34,6 +39,8 @@ public class AlarmLogContext {
     @Setter
     private static Boolean simpleWarnInfo = false;
 
+    private static volatile Set<String> includeContextKeys = Collections.emptySet();
+
     private static Boolean includeExceptionExtend = false;
 
     private static Boolean excludeExceptionExtend = false;
@@ -51,6 +58,35 @@ public class AlarmLogContext {
     private static AlarmMessageContext alarmMessageContext = new DefaultAlarmMessageContext();
 
     private static AlarmLogSimpleConfig simpleConfig;
+
+    public static Set<String> getIncludeContextKeys() {
+        return includeContextKeys;
+    }
+
+    public static void setIncludeContextKeys(Collection<String> includeContextKeys) {
+        if (includeContextKeys == null || includeContextKeys.isEmpty()) {
+            AlarmLogContext.includeContextKeys = Collections.emptySet();
+            return;
+        }
+        Set<String> normalizedKeys = new LinkedHashSet<>();
+        for (String key : includeContextKeys) {
+            if (key != null) {
+                String normalizedKey = key.trim();
+                if (!normalizedKey.isEmpty()) {
+                    normalizedKeys.add(normalizedKey);
+                }
+            }
+        }
+        AlarmLogContext.includeContextKeys = normalizedKeys.isEmpty()
+                ? Collections.emptySet()
+                : Collections.unmodifiableSet(normalizedKeys);
+    }
+
+    public static void setIncludeContextKeys(String includeContextKeys) {
+        setIncludeContextKeys(includeContextKeys == null
+                ? Collections.emptyList()
+                : Arrays.asList(includeContextKeys.split(",")));
+    }
 
     public static AlarmLogSimpleConfig getSimpleConfig () {
         if (Objects.isNull(simpleConfig)) {
