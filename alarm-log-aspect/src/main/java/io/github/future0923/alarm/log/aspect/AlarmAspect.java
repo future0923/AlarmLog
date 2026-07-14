@@ -2,6 +2,7 @@ package io.github.future0923.alarm.log.aspect;
 
 import io.github.future0923.alarm.log.common.context.AlarmLogContext;
 import io.github.future0923.alarm.log.common.context.AlarmInfoContext;
+import io.github.future0923.alarm.log.common.context.AlarmContextSnapshot;
 import io.github.future0923.alarm.log.common.utils.ExceptionUtils;
 import io.github.future0923.alarm.log.warn.common.dispatcher.AlarmLogDispatcher;
 import org.aspectj.lang.JoinPoint;
@@ -9,6 +10,7 @@ import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.MDC;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,7 +40,7 @@ public class AlarmAspect {
                 || doWarnProcess(alarmClass, ex)
                 || AlarmLogContext.shouldWarnException(ex)) {
             String threadName = Thread.currentThread().getName();
-            StackTraceElement stackTraceElement = ex.getStackTrace()[0];
+            StackTraceElement stackTraceElement = getFirstStackTraceElement(ex);
             AlarmLogDispatcher.dispatch(
                     AlarmInfoContext.builder()
                             .message(ex.getMessage())
@@ -49,10 +51,19 @@ public class AlarmAspect {
                             .lineNumber(stackTraceElement.getLineNumber())
                             .methodName(stackTraceElement.getMethodName())
                             .className(stackTraceElement.getClassName())
+                            .contextData(AlarmContextSnapshot.capture(MDC.getCopyOfContextMap()))
                             .build()
                     , ex);
         }
         throw ex;
+    }
+
+    private StackTraceElement getFirstStackTraceElement(Throwable throwable) {
+        StackTraceElement[] stackTraceElements = throwable.getStackTrace();
+        if (stackTraceElements.length > 0) {
+            return stackTraceElements[0];
+        }
+        return new StackTraceElement(throwable.getClass().getName(), "unknown", null, -1);
     }
 
     private boolean doWarnProcess(Alarm alarm, Throwable ex) {
