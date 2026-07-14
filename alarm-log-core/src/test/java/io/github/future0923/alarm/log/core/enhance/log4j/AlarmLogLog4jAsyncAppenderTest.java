@@ -8,13 +8,17 @@ import io.github.future0923.alarm.log.warn.common.factory.AlarmLogWarnServiceFac
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
+import org.apache.log4j.spi.ThrowableInformation;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -23,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -102,5 +107,39 @@ class AlarmLogLog4jAsyncAppenderTest {
         assertEquals("trace-log4j", captured.get().getContextData().get("traceId"));
         assertEquals("span-log4j", captured.get().getContextData().get("spanId"));
         assertFalse(captured.get().getContextData().containsKey("Authorization"));
+    }
+
+    @Test
+    void doAppendSkipsNonStringPropertyWhoseConversionFailsAndStillDispatches() throws Exception {
+        CountDownLatch capturedLatch = new CountDownLatch(1);
+        AtomicReference<AlarmInfoContext> captured = new AtomicReference<>();
+        AlarmLogWarnServiceFactory.setAlarmLogWarnServices(Collections.singletonList((context, throwable) -> {
+            captured.set(context);
+            capturedLatch.countDown();
+            return true;
+        }));
+        AlarmLogContext.setIncludeContextKeys(Arrays.asList("invalid", "traceId"));
+
+        Map<String, Object> properties = new LinkedHashMap<>();
+        properties.put("invalid", new Object() {
+            @Override
+            public String toString() {
+                throw new RuntimeException("cannot stringify");
+            }
+        });
+        properties.put("traceId", "trace-log4j");
+        RuntimeException throwable = new RuntimeException("boom");
+        LoggingEvent event = new LoggingEvent(
+                getClass().getName(), Logger.getLogger("test"), System.currentTimeMillis(), Level.ERROR,
+                "boom", Thread.currentThread().getName(), new ThrowableInformation(throwable),
+                null, null, properties);
+        appender = new AlarmLogLog4jAsyncAppender();
+
+        assertDoesNotThrow(() -> appender.doAppend(event));
+        releaseWorker.countDown();
+
+        assertTrue(capturedLatch.await(3, TimeUnit.SECONDS));
+        assertEquals("trace-log4j", captured.get().getContextData().get("traceId"));
+        assertFalse(captured.get().getContextData().containsKey("invalid"));
     }
 }

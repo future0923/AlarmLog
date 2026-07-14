@@ -19,7 +19,12 @@ public final class AlarmContextSnapshot {
         for (String key : keys) {
             Object value = source.get(key);
             if (value != null) {
-                String text = String.valueOf(value).trim();
+                String text;
+                try {
+                    text = String.valueOf(value).trim();
+                } catch (RuntimeException ignored) {
+                    continue;
+                }
                 if (!text.isEmpty()) {
                     result.put(key, text);
                 }

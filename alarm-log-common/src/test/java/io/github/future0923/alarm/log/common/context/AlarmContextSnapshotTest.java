@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -91,5 +92,24 @@ class AlarmContextSnapshotTest {
         expected.put("traceId", "trace-1");
         expected.put("attempt", "3");
         assertEquals(expected, snapshot);
+    }
+
+    @Test
+    void captureSkipsValueWhoseStringConversionFailsAndContinues() {
+        AlarmLogContext.setIncludeContextKeys(Arrays.asList("invalid", "traceId"));
+        Map<String, Object> source = new LinkedHashMap<>();
+        source.put("invalid", new Object() {
+            @Override
+            public String toString() {
+                throw new RuntimeException("cannot stringify");
+            }
+        });
+        source.put("traceId", "trace-1");
+
+        Map<String, String> snapshot = assertDoesNotThrow(
+                () -> AlarmContextSnapshot.capture(source));
+
+        assertFalse(snapshot.containsKey("invalid"));
+        assertEquals("trace-1", snapshot.get("traceId"));
     }
 }
