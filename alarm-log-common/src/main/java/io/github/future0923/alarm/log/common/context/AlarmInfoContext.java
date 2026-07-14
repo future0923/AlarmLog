@@ -1,6 +1,5 @@
 package io.github.future0923.alarm.log.common.context;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,8 +14,6 @@ import java.util.Map;
  */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Accessors(chain = true)
 public class AlarmInfoContext {
 
@@ -50,6 +47,14 @@ public class AlarmInfoContext {
 
     public AlarmInfoContext(String message, String throwableName, String loggerName, String threadName,
                             String level, int lineNumber, String fileName, String className, String methodName) {
+        this(message, throwableName, loggerName, threadName, level, lineNumber, fileName, className,
+                methodName, Collections.emptyMap());
+    }
+
+    @Builder
+    public AlarmInfoContext(String message, String throwableName, String loggerName, String threadName,
+                            String level, int lineNumber, String fileName, String className, String methodName,
+                            Map<String, String> contextData) {
         this.message = message;
         this.throwableName = throwableName;
         this.loggerName = loggerName;
@@ -59,6 +64,7 @@ public class AlarmInfoContext {
         this.fileName = fileName;
         this.className = className;
         this.methodName = methodName;
+        setContextData(contextData);
     }
 
     public Map<String, String> getContextData() {
