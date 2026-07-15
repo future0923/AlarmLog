@@ -96,9 +96,6 @@
     <profiles>
         <profile>
             <id>maven-central-release</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <build>
                 <plugins>
                     <plugin>
